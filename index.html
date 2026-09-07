@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistem Telemetri Panel Surya & Stasiun Cuaca</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --primary: #0f172a;
+      --primary-hover: #1e293b;
+      
+      --accent-volt: #d97706;
+      --accent-curr: #059669;
+      --accent-temp-a: #dc2626;
+      --accent-temp-b: #ea580c;
+      --accent-dht-temp: #b91c1c;
+      --accent-dht-hum: #0284c7;
+      --accent-wind: #0891b2;
+      --accent-forecast: #4f46e5;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background-color: var(--bg); color: var(--text-main); padding: 20px 16px; display: flex; justify-content: center; }
+
+    /* Modal Login */
+    #login-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    .login-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+    }
+    .login-box h2 { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+    .login-box p { font-size: 12px; color: var(--text-muted); margin-bottom: 18px; }
+    .input-group { margin-bottom: 12px; }
+    .input-group label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-muted); }
+    .input-group input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+    .input-group input:focus { border-color: var(--primary); }
+    .btn-login {
+      width: 100%;
+      padding: 9px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .btn-login:hover { background: var(--primary-hover); }
+    #login-error { color: #dc2626; font-size: 11px; margin-top: 10px; display: none; }
+
+    /* Dashboard Layout */
+    .dashboard-container {
+      max-width: 1100px;
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Header Navigasi Compact */
+    .app-header {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-info h1 { font-size: 16px; font-weight: 700; }
+    .header-info p { font-size: 11px; color: var(--text-muted); margin-top: 2px; display: flex; gap: 6px; }
+    .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    
+    /* Widget Jam & Tanggal */
+    .time-badge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #f8fafc;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .status-badge {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid var(--border);
+    }
+    .status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #10b981;
+    }
+
+    .btn-logout {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-logout:hover { background: #f1f5f9; color: var(--text-main); }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    /* Grid Metrik Compact */
+    .grid-solar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .grid-weather {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .metric-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .c-volt::before     { background: var(--accent-volt); }
+    .c-curr::before     { background: var(--accent-curr); }
+    .c-pa::before       { background: var(--accent-temp-a); }
+    .c-pb::before       { background: var(--accent-temp-b); }
+    .c-dhttemp::before  { background: var(--accent-dht-temp); }
+    .c-dhthum::before   { background: var(--accent-dht-hum); }
+    .c-wind::before     { background: var(--accent-wind); }
+    .c-forecast::before { background: var(--accent-forecast); }
+
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .metric-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+    .metric-value-box {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .metric-value {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+    }
+    .metric-unit {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .metric-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* Panel Riwayat Data Compact */
+    .table-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .toolbar-left h2 { font-size: 14px; font-weight: 700; color: var(--text-main); }
+    .toolbar-left p { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .toolbar-actions { display: flex; gap: 8px; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+    .btn-export { background: #0f172a; color: #fff; }
+    .btn-export:hover { background: #1e293b; }
+    .btn-delete { background: #ffffff; color: #dc2626; border: 1px solid #fecaca; }
+    .btn-delete:hover { background: #fef2f2; }
+
+    .table-wrapper {
+      max-height: 360px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 11.5px; text-align: left; }
+    thead th {
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 2;
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--text-main);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      white-space: nowrap;
+    }
+    tbody tr:hover { background: #f8fafc; }
+  </style>
+</head>
+<body>
+
+  <!-- Modal Login -->
+  <div id="login-overlay">
+    <div class="login-box">
+      <h2>Otentikasi Sistem</h2>
+      <p>Akses log telemetri instrumen</p>
+      <div class="input-group">
+        <label>Nama Pengguna</label>
+        <input type="text" id="username" placeholder="Username" autocomplete="off" />
+      </div>
+      <div class="input-group">
+        <label>Kata Sandi</label>
+        <input type="password" id="password" placeholder="Password" />
+      </div>
+      <button id="btn-login" class="btn-login">Masuk</button>
+      <div id="login-error">Kredensial tidak valid.</div>
+    </div>
+  </div>
+
+  <!-- Dashboard Utama -->
+  <div class="dashboard-container" id="dashboard-content">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-info">
+        <h1>Monitoring Panel Surya</h1>
+        <p>
+          <span>ESP32 Client</span>
+          <span>&bull;</span>
+          <span>Firebase RTDB</span>
+        </p>
+      </div>
+      <div class="header-actions">
+        <!-- Widget Tanggal & Jam Live -->
+        <div class="time-badge" id="live-clock">--:--:-- WIB</div>
+        <div class="status-badge">
+          <span class="status-dot"></span>
+          <span id="txt-status">Menghubungkan...</span>
+        </div>
+        <button class="btn-logout" id="btn-logout">Logout</button>
+      </div>
+    </header>
+
+    <!-- Grup Parameter Panel Surya -->
+    <div>
+      <div class="section-label">Parameter Pembangkitan Daya (PV)</div>
+      <div class="grid-solar">
+        <div class="metric-card c-volt">
+          <div class="metric-header">
+            <span class="metric-title">Tegangan Bus</span>
+          </div>
+          <div class="metric-value-box">
+            <span class="metric-value" id="tegangan">--</span>
+            <span class="metric-unit">V</span>
+          </div>
+          <div class="metric-sub">INA219</div>
+        </div>
+
+        <div class="metric-card c-curr">
+          <div class="metric-header">
+            <span class="metric-title">Arus Beban</span>
+          </div>
+          <div class="metric-value-box">
+            <span class="metric-value" id="arus">--</span>
+            <span class="metric-unit">mA</span>
+          </div>
+          <div class="metric-sub">INA219</div>
+        </div>
+
+        <div class="metric-card c-pa">
+          <div class="metric-header">
+            <span class="metric-title">Suhu Sel P.A</span>
+          </div>
+          <div class="metric-value-box">
+            <span class="metric-value" id="sensor-pa">--</span>
+            <span class="metric-unit">°C</span>
+          </div>
+          <div class="metric-sub">DS18B20 Titik A</div>
+        </div>
+
+        <div class="metric-card c-pb">
+          <div class="metric-header">
+            <span class="metric-title">Suhu Sel P.B</span>
+          </div>
+          <div class="metric-value-box">
+            <span class="metric-value" id="sensor-pb">--</span>
+            <span class="metric-unit">°C</span>
+          </div>
+          <div class="metric-sub">DS18B20 Titik B</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grup Parameter Lingkungan & Prakiraan -->
+    <div>
+      <div class="section-label">Parameter Meteorologi & Lingkungan</div>
+      <div class="grid-weather">
+        <div class="metric-card c-dhttemp">
+          <div class="metric-header">
+            <span class="metric-title">Suhu Ambien</span>
+          </div>
+          <div class="metric-value-box">
+            <span class="metric-value" id="dht-suhu">--</span>
+            <span class="metric-unit">°C</span>
+          </div>
+          <div class="metric-sub">DHT22</div>
+        </div>
+
+        <div class="metric-card c-dhthum">
+          <div class="metric-header">
+            <span class="metric-title">Kelembapan</span>
+          </div>
+          <div class="metric-value-box">
+            <span class="metric-value" id="dht-hum">--</span>
+            <span class="metric-unit">%</span>
+          </div>
+          <div class="metric-sub">DHT22 (RH)</div>
+        </div>
+
+        <div class="metric-card c-wind">
+          <div class="metric-header">
+            <span class="metric-title">Kecepatan Angin</span>
+          </div>
+          <div class="metric-value-box">
+            <span class="metric-value" id="angin">--</span>
+            <span class="metric-unit">m/s</span>
+          </div>
+          <div class="metric-sub">Anemometer</div>
+        </div>
+
+        <!-- Kartu Prakiraan Cuaca Medan Timur (UMSU) -->
+        <div class="metric-card c-forecast">
+          <div class="metric-header">
+            <span class="metric-title">Prakiraan Medan Timur</span>
+          </div>
+          <div class="metric-value-box">
+            <span class="metric-value" id="weather-desc" style="font-size: 15px; font-family: inherit;">Memuat...</span>
+          </div>
+          <div class="metric-sub" id="weather-detail">Area Sekitar Kampus UMSU</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Tabel -->
+    <div class="table-panel">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <h2>Log Telemetri</h2>
+          <p>20 entri rekaman data terakhir</p>
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn btn-delete" id="btn-clear">Hapus Log</button>
+          <button class="btn btn-export" id="btn-csv">Ekspor CSV</button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 35px;">No</th>
+              <th>Waktu</th>
+              <th>Tegangan (V)</th>
+              <th>Arus (mA)</th>
+              <th>Suhu P.A (°C)</th>
+              <th>Suhu P.B (°C)</th>
+              <th>Suhu Ambien (°C)</th>
+              <th>Kelembapan (%)</th>
+              <th>Kecepatan Angin (m/s)</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 18px; font-family: inherit;">Menunggu data dari ESP32...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const AUTH_USER = "admin";
+    const AUTH_PASS = "surya123";
+
+    const overlay = document.getElementById("login-overlay");
+    const dashboard = document.getElementById("dashboard-content");
+    const btnLogin = document.getElementById("btn-login");
+    const btnLogout = document.getElementById("btn-logout");
+    const userInput = document.getElementById("username");
+    const passInput = document.getElementById("password");
+    const loginError = document.getElementById("login-error");
+    const clockEl = document.getElementById("live-clock");
+
+    // --- 1. Jam Digital, Hari, dan Tanggal Realtime ---
+    function updateClock() {
+      const now = new Date();
+      const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        timeZone: 'Asia/Jakarta'
+      };
+      const datePart = now.toLocaleDateString('id-ID', options);
+      const timePart = now.toLocaleTimeString('id-ID', { hour12: false, timeZone: 'Asia/Jakarta' });
+      clockEl.innerText = `${datePart} • ${timePart} WIB`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // --- 2. Integrasi Prakiraan Cuaca (Open-Meteo API: Medan Timur / UMSU) ---
+    async function loadWeatherForecast() {
+      const descEl = document.getElementById("weather-desc");
+      const detailEl = document.getElementById("weather-detail");
+
+      try {
+        // Koordinat Glugur Darat / UMSU Medan: Lat 3.61, Lon 98.68
+        const url = "https://api.open-meteo.com/v1/forecast?latitude=3.61&longitude=98.68&current=temperature_2m,relative_humidity_2m,weather_code&timezone=Asia%2FJakarta";
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data && data.current) {
+          const code = data.current.weather_code;
+          const temp = data.current.temperature_2m;
+          const hum = data.current.relative_humidity_2m;
+
+          // Mapping WMO Weather interpretation codes
+          let weatherText = "Cerah";
+          if (code === 1 || code === 2) weatherText = "Sebagian Berawan";
+          else if (code === 3) weatherText = "Berawan Tebal";
+          else if ([45, 48].includes(code)) weatherText = "Berkabut";
+          else if ([51, 53, 55, 61, 63].includes(code)) weatherText = "Hujan Ringan";
+          else if ([65, 80, 81, 82].includes(code)) weatherText = "Hujan Sedang/Lebat";
+          else if ([95, 96, 99].includes(code)) weatherText = "Hujan Petir";
+
+          descEl.innerText = `${weatherText} (${temp}°C)`;
+          detailEl.innerText = `RH: ${hum}% • Stasiun Cuaca UMSU`;
+        }
+      } catch (err) {
+        descEl.innerText = "Data Cuaca Offline";
+        detailEl.innerText = "Gagal memuat API cuaca";
+      }
+    }
+    loadWeatherForecast();
+    setInterval(loadWeatherForecast, 1800000); // Perbarui cuaca tiap 30 menit
+
+    // --- 3. Otentikasi Login ---
+    if (sessionStorage.getItem("isLoggedIn") === "true") {
+      bukaDashboard();
+    }
+
+    function bukaDashboard() {
+      overlay.style.display = "none";
+      dashboard.style.display = "flex";
+    }
+
+    function tutupDashboard() {
+      sessionStorage.removeItem("isLoggedIn");
+      overlay.style.display = "flex";
+      dashboard.style.display = "none";
+      passInput.value = "";
+      userInput.value = "";
+      loginError.style.display = "none";
+    }
+
+    btnLogin.addEventListener("click", () => {
+      if (userInput.value.trim() === AUTH_USER && passInput.value.trim() === AUTH_PASS) {
+        sessionStorage.setItem("isLoggedIn", "true");
+        bukaDashboard();
+      } else {
+        loginError.style.display = "block";
+      }
+    });
+
+    btnLogout.addEventListener("click", tutupDashboard);
+    passInput.addEventListener("keyup", (e) => {
+      if (e.key === "Enter") btnLogin.click();
+    });
+
+    // --- 4. Firebase Configuration ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyBW0pBfoAVDNdl2gf3oJa0myHRrPqmMyrg",
+      authDomain: "panel-surya-7dba5.firebaseapp.com",
+      databaseURL: "https://panel-surya-7dba5-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "panel-surya-7dba5",
+      storageBucket: "panel-surya-7dba5.firebasestorage.app",
+      messagingSenderId: "399348219428",
+      appId: "1:399348219428:web:f70777e891ad42c25962b1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const voltEl = document.getElementById("tegangan");
+    const currEl = document.getElementById("arus");
+    const paEl = document.getElementById("sensor-pa");
+    const pbEl = document.getElementById("sensor-pb");
+    const dhtTempEl = document.getElementById("dht-suhu");
+    const dhtHumEl = document.getElementById("dht-hum");
+    const windEl = document.getElementById("angin");
+    const tableBody = document.getElementById("table-body");
+    const btnCsv = document.getElementById("btn-csv");
+    const btnClear = document.getElementById("btn-clear");
+    const txtStatus = document.getElementById("txt-status");
+
+    // Realtime Cards
+    onValue(ref(db, "monitoring/realtime"), (snap) => {
+      const val = snap.val();
+      if (val) {
+        voltEl.innerText    = val.tegangan !== undefined ? Number(val.tegangan).toFixed(2) : "--";
+        currEl.innerText    = val.arus !== undefined ? Number(val.arus).toFixed(1) : "--";
+        paEl.innerText      = val.sensor_pa !== undefined ? Number(val.sensor_pa).toFixed(1) : "--";
+        pbEl.innerText      = val.sensor_pb !== undefined ? Number(val.sensor_pb).toFixed(1) : "--";
+        dhtTempEl.innerText = val.suhu !== undefined ? Number(val.suhu).toFixed(1) : "--";
+        dhtHumEl.innerText  = val.kelembapan !== undefined ? Number(val.kelembapan).toFixed(1) : "--";
+        windEl.innerText    = val.angin !== undefined ? Number(val.angin).toFixed(2) : "--";
+        txtStatus.innerText = "Sinkron";
+      }
+    });
+
+    // Realtime Table
+    onValue(ref(db, "monitoring/riwayat"), (snap) => {
+      const data = snap.val();
+      if (data) {
+        let html = "";
+        let no = 1;
+        const keys = Object.keys(data).slice(-20).reverse();
+        for (let k of keys) {
+          const item = data[k];
+          html += `<tr>
+            <td style="color: var(--text-muted);">${no++}</td>
+            <td style="font-family: inherit; color: var(--text-muted);">${item.waktu || k}</td>
+            <td style="font-weight: 600;">${item.tegangan !== undefined ? Number(item.tegangan).toFixed(2) : "-"}</td>
+            <td style="font-weight: 600;">${item.arus !== undefined ? Number(item.arus).toFixed(1) : "-"}</td>
+            <td style="font-weight: 600;">${item.sensor_pa !== undefined ? Number(item.sensor_pa).toFixed(1) : "-"}</td>
+            <td style="font-weight: 600;">${item.sensor_pb !== undefined ? Number(item.sensor_pb).toFixed(1) : "-"}</td>
+            <td style="font-weight: 600;">${item.suhu !== undefined ? Number(item.suhu).toFixed(1) : "-"}</td>
+            <td style="font-weight: 600;">${item.kelembapan !== undefined ? Number(item.kelembapan).toFixed(1) : "-"}</td>
+            <td style="font-weight: 600;">${item.angin !== undefined ? Number(item.angin).toFixed(2) : "-"}</td>
+          </tr>`;
+        }
+        tableBody.innerHTML = html;
+      } else {
+        tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 18px; font-family: inherit;">Data riwayat kosong.</td></tr>`;
+      }
+    });
+
+    // CSV Download
+    btnCsv.addEventListener("click", async () => {
+      btnCsv.innerText = "Memproses...";
+      try {
+        const snap = await get(ref(db, "monitoring/riwayat"));
+        const data = snap.val();
+
+        if (!data) {
+          alert("Tidak ada data riwayat di database.");
+          btnCsv.innerText = "Ekspor CSV";
+          return;
+        }
+
+        let csv = "No;Waktu Transmisi;Tegangan (V);Arus (mA);Suhu Sensor P.A (C);Suhu Sensor P.B (C);Suhu Ambien (C);Kelembapan (%);Kecepatan Angin (m/s)\r\n";
+        let no = 1;
+
+        for (let key in data) {
+          const row = data[key];
+          const waktu = row.waktu ? row.waktu : key;
+          const v   = row.tegangan !== undefined ? String(Number(row.tegangan).toFixed(2)).replace('.', ',') : "";
+          const a   = row.arus !== undefined ? String(Number(row.arus).toFixed(1)).replace('.', ',') : "";
+          const spa = row.sensor_pa !== undefined ? String(Number(row.sensor_pa).toFixed(1)).replace('.', ',') : "";
+          const spb = row.sensor_pb !== undefined ? String(Number(row.sensor_pb).toFixed(1)).replace('.', ',') : "";
+          const st  = row.suhu !== undefined ? String(Number(row.suhu).toFixed(1)).replace('.', ',') : "";
+          const sh  = row.kelembapan !== undefined ? String(Number(row.kelembapan).toFixed(1)).replace('.', ',') : "";
+          const w   = row.angin !== undefined ? String(Number(row.angin).toFixed(2)).replace('.', ',') : "";
+
+          csv += `${no};"${waktu}";${v};${a};${spa};${spb};${st};${sh};${w}\r\n`;
+          no++;
+        }
+
+        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = `Telemetry_Report_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        btnCsv.innerText = "Ekspor CSV";
+      } catch (err) {
+        alert("Gagal mengunduh: " + err.message);
+        btnCsv.innerText = "Ekspor CSV";
+      }
+    });
+
+    // Clear History
+    btnClear.addEventListener("click", async () => {
+      if (confirm("Kosongkan seluruh riwayat log di database?")) {
+        await remove(ref(db, "monitoring/riwayat"));
+      }
+    });
+  </script>
+</body>
+</html>
