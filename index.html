@@ -16,6 +16,11 @@
       --text-muted: #64748b;
       --primary: #0f172a;
       --primary-hover: #1e293b;
+      --table-stripe: #f8fafc;
+      --table-border: #f1f5f9;
+      --badge-bg: #f8fafc;
+      --status-bg: #f1f5f9;
+      --status-text: #334155;
       
       --accent-volt: #d97706;
       --accent-curr: #059669;
@@ -27,13 +32,28 @@
       --accent-forecast: #4f46e5;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    [data-theme="dark"] {
+      --bg: #0b1329;
+      --card-bg: #131f37;
+      --border: #233554;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --table-stripe: #172642;
+      --table-border: #1e2e4a;
+      --badge-bg: #0f172a;
+      --status-bg: #1e293b;
+      --status-text: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
     body { background-color: var(--bg); color: var(--text-main); padding: 20px 16px; display: flex; justify-content: center; }
 
     /* Modal Login */
     #login-overlay {
       position: fixed; inset: 0;
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(15, 23, 42, 0.7);
       backdrop-filter: blur(4px);
       display: flex; align-items: center; justify-content: center;
       z-index: 9999;
@@ -45,15 +65,17 @@
       padding: 28px 24px;
       width: 100%;
       max-width: 340px;
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
     }
-    .login-box h2 { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+    .login-box h2 { font-size: 16px; font-weight: 700; margin-bottom: 2px; color: var(--text-main); }
     .login-box p { font-size: 12px; color: var(--text-muted); margin-bottom: 18px; }
     .input-group { margin-bottom: 12px; }
     .input-group label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-muted); }
     .input-group input {
       width: 100%;
       padding: 8px 10px;
+      background: var(--card-bg);
+      color: var(--text-main);
       border: 1px solid var(--border);
       border-radius: 6px;
       font-size: 13px;
@@ -96,18 +118,18 @@
       flex-wrap: wrap;
       gap: 12px;
     }
-    .header-info h1 { font-size: 16px; font-weight: 700; }
+    .header-info h1 { font-size: 16px; font-weight: 700; color: var(--text-main); }
     .header-info p { font-size: 11px; color: var(--text-muted); margin-top: 2px; display: flex; gap: 6px; }
     .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     
-    /* Widget Jam & Tanggal */
+    /* Widget Jam & Status */
     .time-badge {
       display: flex; align-items: center; gap: 6px;
       padding: 4px 10px;
       border-radius: 6px;
       font-size: 11px;
       font-weight: 600;
-      background: #f8fafc;
+      background: var(--badge-bg);
       color: var(--text-main);
       border: 1px solid var(--border);
       font-family: 'JetBrains Mono', monospace;
@@ -119,8 +141,8 @@
       border-radius: 6px;
       font-size: 11px;
       font-weight: 600;
-      background: #f1f5f9;
-      color: #334155;
+      background: var(--status-bg);
+      color: var(--status-text);
       border: 1px solid var(--border);
     }
     .status-dot {
@@ -128,8 +150,23 @@
       background: #10b981;
     }
 
+    /* Tombol Tema & Tombol Logout */
+    .btn-theme {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 5px 9px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-theme:hover { background: var(--table-stripe); }
+
     .btn-logout {
-      background: #ffffff;
+      background: var(--card-bg);
       border: 1px solid var(--border);
       color: var(--text-muted);
       padding: 5px 12px;
@@ -138,7 +175,7 @@
       font-weight: 600;
       cursor: pointer;
     }
-    .btn-logout:hover { background: #f1f5f9; color: var(--text-main); }
+    .btn-logout:hover { background: var(--table-stripe); color: var(--text-main); }
 
     .section-label {
       font-size: 11px;
@@ -150,12 +187,7 @@
     }
 
     /* Grid Metrik Compact */
-    .grid-solar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 10px;
-    }
-    .grid-weather {
+    .grid-solar, .grid-weather {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 10px;
@@ -253,9 +285,11 @@
       transition: all 0.15s;
     }
     .btn-export { background: #0f172a; color: #fff; }
-    .btn-export:hover { background: #1e293b; }
-    .btn-delete { background: #ffffff; color: #dc2626; border: 1px solid #fecaca; }
-    .btn-delete:hover { background: #fef2f2; }
+    [data-theme="dark"] .btn-export { background: #2563eb; }
+    .btn-export:hover { opacity: 0.9; }
+    .btn-delete { background: var(--card-bg); color: #dc2626; border: 1px solid #fecaca; }
+    [data-theme="dark"] .btn-delete { border-color: #7f1d1d; color: #f87171; }
+    .btn-delete:hover { background: rgba(220, 38, 38, 0.08); }
 
     .table-wrapper {
       max-height: 360px;
@@ -265,7 +299,7 @@
     }
     table { width: 100%; border-collapse: collapse; font-size: 11.5px; text-align: left; }
     thead th {
-      background: #f8fafc;
+      background: var(--table-stripe);
       color: var(--text-muted);
       font-weight: 600;
       font-size: 10px;
@@ -278,13 +312,13 @@
     }
     tbody td {
       padding: 8px 12px;
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid var(--table-border);
       color: var(--text-main);
       font-family: 'JetBrains Mono', monospace;
       font-size: 11.5px;
       white-space: nowrap;
     }
-    tbody tr:hover { background: #f8fafc; }
+    tbody tr:hover { background: var(--table-stripe); }
   </style>
 </head>
 <body>
@@ -327,6 +361,8 @@
           <span class="status-dot"></span>
           <span id="txt-status">Menghubungkan...</span>
         </div>
+        <!-- Tombol Toggle Tema Terang/Gelap -->
+        <button class="btn-theme" id="btn-theme" title="Ubah Mode Tampilan">🌙</button>
         <button class="btn-logout" id="btn-logout">Logout</button>
       </div>
     </header>
@@ -454,7 +490,7 @@
               <th>Arus (mA)</th>
               <th>Suhu P.A (°C)</th>
               <th>Suhu P.B (°C)</th>
-              <th>Suhu Ambien (°C)</th>
+              <th>Suhu Lingkungan (°C)</th>
               <th>Kelembapan (%)</th>
               <th>Kecepatan Angin (m/s)</th>
             </tr>
@@ -483,6 +519,20 @@
     const passInput = document.getElementById("password");
     const loginError = document.getElementById("login-error");
     const clockEl = document.getElementById("live-clock");
+    const btnTheme = document.getElementById("btn-theme");
+
+    // --- Mode Gelap / Terang (Dark Mode Toggle) ---
+    const savedTheme = localStorage.getItem("app_theme") || "light";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+    btnTheme.innerText = savedTheme === "dark" ? "☀️" : "🌙";
+
+    btnTheme.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme");
+      const targetTheme = currentTheme === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", targetTheme);
+      localStorage.setItem("app_theme", targetTheme);
+      btnTheme.innerText = targetTheme === "dark" ? "☀️" : "🌙";
+    });
 
     // --- 1. Jam Digital, Hari, dan Tanggal Realtime ---
     function updateClock() {
@@ -491,8 +541,8 @@
         weekday: 'long', 
         year: 'numeric', 
         month: 'long', 
-        day: 'numeric',
-        timeZone: 'Asia/Jakarta'
+        day: 'numeric', 
+        timeZone: 'Asia/Jakarta' 
       };
       const datePart = now.toLocaleDateString('id-ID', options);
       const timePart = now.toLocaleTimeString('id-ID', { hour12: false, timeZone: 'Asia/Jakarta' });
@@ -507,7 +557,6 @@
       const detailEl = document.getElementById("weather-detail");
 
       try {
-        // Koordinat Glugur Darat / UMSU Medan: Lat 3.61, Lon 98.68
         const url = "https://api.open-meteo.com/v1/forecast?latitude=3.61&longitude=98.68&current=temperature_2m,relative_humidity_2m,weather_code&timezone=Asia%2FJakarta";
         const res = await fetch(url);
         const data = await res.json();
@@ -517,7 +566,6 @@
           const temp = data.current.temperature_2m;
           const hum = data.current.relative_humidity_2m;
 
-          // Mapping WMO Weather interpretation codes
           let weatherText = "Cerah";
           if (code === 1 || code === 2) weatherText = "Sebagian Berawan";
           else if (code === 3) weatherText = "Berawan Tebal";
@@ -535,7 +583,7 @@
       }
     }
     loadWeatherForecast();
-    setInterval(loadWeatherForecast, 1800000); // Perbarui cuaca tiap 30 menit
+    setInterval(loadWeatherForecast, 1800000);
 
     // --- 3. Otentikasi Login ---
     if (sessionStorage.getItem("isLoggedIn") === "true") {
@@ -651,7 +699,7 @@
           return;
         }
 
-        let csv = "No;Waktu Transmisi;Tegangan (V);Arus (mA);Suhu Sensor P.A (C);Suhu Sensor P.B (C);Suhu Ambien (C);Kelembapan (%);Kecepatan Angin (m/s)\r\n";
+        let csv = "No;Waktu Transmisi;Tegangan (V);Arus (mA);Suhu Sensor P.A (C);Suhu Sensor P.B (C);Suhu Lingkungan (C);Kelembapan (%);Kecepatan Angin (m/s)\r\n";
         let no = 1;
 
         for (let key in data) {
