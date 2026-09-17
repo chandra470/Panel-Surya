@@ -22,10 +22,11 @@
       --status-bg: #f1f5f9;
       --status-text: #334155;
       
-      --accent-volt: #d97706;
-      --accent-curr: #059669;
-      --accent-temp-a: #dc2626;
-      --accent-temp-b: #ea580c;
+      --accent-pv1: #d97706;
+      --accent-pv2: #059669;
+      --accent-pv3: #2563eb;
+      --accent-pv4: #7c3aed;
+      --accent-temp: #ea580c;
       --accent-dht-temp: #b91c1c;
       --accent-dht-hum: #0284c7;
       --accent-wind: #0891b2;
@@ -99,14 +100,14 @@
 
     /* Dashboard Layout */
     .dashboard-container {
-      max-width: 1100px;
+      max-width: 1280px;
       width: 100%;
       display: none;
       flex-direction: column;
       gap: 16px;
     }
 
-    /* Header Navigasi Compact */
+    /* Header Navigasi */
     .app-header {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -122,7 +123,6 @@
     .header-info p { font-size: 11px; color: var(--text-muted); margin-top: 2px; display: flex; gap: 6px; }
     .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     
-    /* Widget Jam & Status */
     .time-badge {
       display: flex; align-items: center; gap: 6px;
       padding: 4px 10px;
@@ -150,7 +150,6 @@
       background: #10b981;
     }
 
-    /* Tombol Tema & Tombol Logout */
     .btn-theme {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -186,10 +185,22 @@
       margin-bottom: 8px;
     }
 
-    /* Grid Metrik Compact */
-    .grid-solar, .grid-weather {
+    /* Grid Layouts */
+    .grid-solar {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .grid-temp {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .grid-weather {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 10px;
     }
 
@@ -197,10 +208,9 @@
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 10px 14px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       position: relative;
       overflow: hidden;
     }
@@ -208,30 +218,78 @@
       content: "";
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 2px;
+      height: 2.5px;
     }
-    .c-volt::before     { background: var(--accent-volt); }
-    .c-curr::before     { background: var(--accent-curr); }
-    .c-pa::before       { background: var(--accent-temp-a); }
-    .c-pb::before       { background: var(--accent-temp-b); }
-    .c-dhttemp::before  { background: var(--accent-dht-temp); }
-    .c-dhthum::before   { background: var(--accent-dht-hum); }
-    .c-wind::before     { background: var(--accent-wind); }
-    .c-forecast::before { background: var(--accent-forecast); }
+    .c-pv1::before     { background: var(--accent-pv1); }
+    .c-pv2::before     { background: var(--accent-pv2); }
+    .c-pv3::before     { background: var(--accent-pv3); }
+    .c-pv4::before     { background: var(--accent-pv4); }
+    .c-temp::before    { background: var(--accent-temp); }
+    .c-dhttemp::before { background: var(--accent-dht-temp); }
+    .c-dhthum::before  { background: var(--accent-dht-hum); }
+    .c-wind::before    { background: var(--accent-wind); }
+    .c-forecast::before{ background: var(--accent-forecast); }
 
     .metric-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
     }
     .metric-title {
-      font-size: 10px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.04em;
+      color: var(--text-main);
+    }
+    .badge-sub {
+      font-size: 9.5px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      background: var(--table-stripe);
+      padding: 1px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* Sub-metrics inside Solar Card */
+    .pv-metrics {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 0;
+    }
+    .pv-sub-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .pv-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .pv-val-box {
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: baseline;
+      gap: 3px;
+    }
+    .pv-val {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .pv-unit {
+      font-size: 11px;
+      font-weight: 500;
       color: var(--text-muted);
     }
+
+    /* Simple Metrics Value Box */
     .metric-value-box {
       display: flex;
       align-items: baseline;
@@ -255,7 +313,7 @@
       margin-top: 3px;
     }
 
-    /* Panel Riwayat Data Compact */
+    /* Panel Riwayat Data */
     .table-panel {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -292,30 +350,31 @@
     .btn-delete:hover { background: rgba(220, 38, 38, 0.08); }
 
     .table-wrapper {
-      max-height: 360px;
+      max-height: 400px;
+      overflow-x: auto;
       overflow-y: auto;
       border: 1px solid var(--border);
       border-radius: 6px;
     }
-    table { width: 100%; border-collapse: collapse; font-size: 11.5px; text-align: left; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
     thead th {
       background: var(--table-stripe);
       color: var(--text-muted);
       font-weight: 600;
-      font-size: 10px;
+      font-size: 9.5px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      padding: 9px 12px;
+      padding: 9px 10px;
       border-bottom: 1px solid var(--border);
       position: sticky; top: 0; z-index: 2;
       white-space: nowrap;
     }
     tbody td {
-      padding: 8px 12px;
+      padding: 8px 10px;
       border-bottom: 1px solid var(--table-border);
       color: var(--text-main);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
+      font-size: 11px;
       white-space: nowrap;
     }
     tbody tr:hover { background: var(--table-stripe); }
@@ -347,7 +406,7 @@
     <!-- Top Header -->
     <header class="app-header">
       <div class="header-info">
-        <h1>Monitoring Panel Surya</h1>
+        <h1>Monitoring 4 Panel Surya & Stasiun Cuaca</h1>
         <p>
           <span>ESP32 Client</span>
           <span>&bull;</span>
@@ -355,76 +414,141 @@
         </p>
       </div>
       <div class="header-actions">
-        <!-- Widget Tanggal & Jam Live -->
         <div class="time-badge" id="live-clock">--:--:-- WIB</div>
         <div class="status-badge">
           <span class="status-dot"></span>
           <span id="txt-status">Menghubungkan...</span>
         </div>
-        <!-- Tombol Toggle Tema Terang/Gelap -->
         <button class="btn-theme" id="btn-theme" title="Ubah Mode Tampilan">🌙</button>
         <button class="btn-logout" id="btn-logout">Logout</button>
       </div>
     </header>
 
-    <!-- Grup Parameter Panel Surya -->
+    <!-- 1. Parameter Tegangan & Arus 4 Panel Surya -->
     <div>
-      <div class="section-label">Parameter Pembangkitan Daya (PV)</div>
+      <div class="section-label">Parameter Pembangkitan Daya 4x PV (INA219)</div>
       <div class="grid-solar">
-        <div class="metric-card c-volt">
+        
+        <!-- PV 1 -->
+        <div class="metric-card c-pv1">
           <div class="metric-header">
-            <span class="metric-title">Tegangan</span>
+            <span class="metric-title">Panel Surya 1</span>
+            <span class="badge-sub">0x40</span>
           </div>
-          <div class="metric-value-box">
-            <span class="metric-value" id="tegangan">--</span>
-            <span class="metric-unit">V</span>
+          <div class="pv-metrics">
+            <div class="pv-sub-item">
+              <span class="pv-label">Tegangan</span>
+              <div class="pv-val-box"><span class="pv-val" id="v1">--</span><span class="pv-unit">V</span></div>
+            </div>
+            <div class="pv-sub-item">
+              <span class="pv-label">Arus</span>
+              <div class="pv-val-box"><span class="pv-val" id="i1">--</span><span class="pv-unit">mA</span></div>
+            </div>
           </div>
-          <div class="metric-sub">INA219</div>
         </div>
 
-        <div class="metric-card c-curr">
+        <!-- PV 2 -->
+        <div class="metric-card c-pv2">
           <div class="metric-header">
-            <span class="metric-title">Arus</span>
+            <span class="metric-title">Panel Surya 2</span>
+            <span class="badge-sub">0x41</span>
           </div>
-          <div class="metric-value-box">
-            <span class="metric-value" id="arus">--</span>
-            <span class="metric-unit">mA</span>
+          <div class="pv-metrics">
+            <div class="pv-sub-item">
+              <span class="pv-label">Tegangan</span>
+              <div class="pv-val-box"><span class="pv-val" id="v2">--</span><span class="pv-unit">V</span></div>
+            </div>
+            <div class="pv-sub-item">
+              <span class="pv-label">Arus</span>
+              <div class="pv-val-box"><span class="pv-val" id="i2">--</span><span class="pv-unit">mA</span></div>
+            </div>
           </div>
-          <div class="metric-sub">INA219</div>
         </div>
 
-        <div class="metric-card c-pa">
+        <!-- PV 3 -->
+        <div class="metric-card c-pv3">
           <div class="metric-header">
-            <span class="metric-title">Suhu Sel P.A</span>
+            <span class="metric-title">Panel Surya 3</span>
+            <span class="badge-sub">0x44</span>
           </div>
-          <div class="metric-value-box">
-            <span class="metric-value" id="sensor-pa">--</span>
-            <span class="metric-unit">°C</span>
+          <div class="pv-metrics">
+            <div class="pv-sub-item">
+              <span class="pv-label">Tegangan</span>
+              <div class="pv-val-box"><span class="pv-val" id="v3">--</span><span class="pv-unit">V</span></div>
+            </div>
+            <div class="pv-sub-item">
+              <span class="pv-label">Arus</span>
+              <div class="pv-val-box"><span class="pv-val" id="i3">--</span><span class="pv-unit">mA</span></div>
+            </div>
           </div>
-          <div class="metric-sub">DS18B20 Titik A</div>
         </div>
 
-        <div class="metric-card c-pb">
+        <!-- PV 4 -->
+        <div class="metric-card c-pv4">
           <div class="metric-header">
-            <span class="metric-title">Suhu Sel P.B</span>
+            <span class="metric-title">Panel Surya 4</span>
+            <span class="badge-sub">0x45</span>
           </div>
-          <div class="metric-value-box">
-            <span class="metric-value" id="sensor-pb">--</span>
-            <span class="metric-unit">°C</span>
+          <div class="pv-metrics">
+            <div class="pv-sub-item">
+              <span class="pv-label">Tegangan</span>
+              <div class="pv-val-box"><span class="pv-val" id="v4">--</span><span class="pv-unit">V</span></div>
+            </div>
+            <div class="pv-sub-item">
+              <span class="pv-label">Arus</span>
+              <div class="pv-val-box"><span class="pv-val" id="i4">--</span><span class="pv-unit">mA</span></div>
+            </div>
           </div>
-          <div class="metric-sub">DS18B20 Titik B</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 2. Parameter 8 Titik Suhu Permukaan Panel (8x DS18B20) -->
+    <div>
+      <div class="section-label">Distribusi Suhu Panel (8x DS18B20)</div>
+      <div class="grid-temp">
+        <div class="metric-card c-temp">
+          <div class="metric-header"><span class="metric-title">Titik T1</span></div>
+          <div class="metric-value-box"><span class="metric-value" id="t1">--</span><span class="metric-unit">°C</span></div>
+        </div>
+        <div class="metric-card c-temp">
+          <div class="metric-header"><span class="metric-title">Titik T2</span></div>
+          <div class="metric-value-box"><span class="metric-value" id="t2">--</span><span class="metric-unit">°C</span></div>
+        </div>
+        <div class="metric-card c-temp">
+          <div class="metric-header"><span class="metric-title">Titik T3</span></div>
+          <div class="metric-value-box"><span class="metric-value" id="t3">--</span><span class="metric-unit">°C</span></div>
+        </div>
+        <div class="metric-card c-temp">
+          <div class="metric-header"><span class="metric-title">Titik T4</span></div>
+          <div class="metric-value-box"><span class="metric-value" id="t4">--</span><span class="metric-unit">°C</span></div>
+        </div>
+        <div class="metric-card c-temp">
+          <div class="metric-header"><span class="metric-title">Titik T5</span></div>
+          <div class="metric-value-box"><span class="metric-value" id="t5">--</span><span class="metric-unit">°C</span></div>
+        </div>
+        <div class="metric-card c-temp">
+          <div class="metric-header"><span class="metric-title">Titik T6</span></div>
+          <div class="metric-value-box"><span class="metric-value" id="t6">--</span><span class="metric-unit">°C</span></div>
+        </div>
+        <div class="metric-card c-temp">
+          <div class="metric-header"><span class="metric-title">Titik T7</span></div>
+          <div class="metric-value-box"><span class="metric-value" id="t7">--</span><span class="metric-unit">°C</span></div>
+        </div>
+        <div class="metric-card c-temp">
+          <div class="metric-header"><span class="metric-title">Titik T8</span></div>
+          <div class="metric-value-box"><span class="metric-value" id="t8">--</span><span class="metric-unit">°C</span></div>
         </div>
       </div>
     </div>
 
-    <!-- Grup Parameter Lingkungan & Prakiraan -->
+    <!-- 3. Parameter Meteorologi & Lingkungan -->
     <div>
       <div class="section-label">Parameter Meteorologi & Lingkungan</div>
       <div class="grid-weather">
         <div class="metric-card c-dhttemp">
-          <div class="metric-header">
-            <span class="metric-title">Suhu Lingkungan</span>
-          </div>
+          <div class="metric-header"><span class="metric-title">Suhu Lingkungan</span></div>
           <div class="metric-value-box">
             <span class="metric-value" id="dht-suhu">--</span>
             <span class="metric-unit">°C</span>
@@ -433,9 +557,7 @@
         </div>
 
         <div class="metric-card c-dhthum">
-          <div class="metric-header">
-            <span class="metric-title">Kelembapan Lingkungan</span>
-          </div>
+          <div class="metric-header"><span class="metric-title">Kelembapan Udara</span></div>
           <div class="metric-value-box">
             <span class="metric-value" id="dht-hum">--</span>
             <span class="metric-unit">%</span>
@@ -444,9 +566,7 @@
         </div>
 
         <div class="metric-card c-wind">
-          <div class="metric-header">
-            <span class="metric-title">Kecepatan Angin</span>
-          </div>
+          <div class="metric-header"><span class="metric-title">Kecepatan Angin</span></div>
           <div class="metric-value-box">
             <span class="metric-value" id="angin">--</span>
             <span class="metric-unit">m/s</span>
@@ -456,23 +576,21 @@
 
         <!-- Kartu Prakiraan Cuaca Medan Timur (UMSU) -->
         <div class="metric-card c-forecast">
-          <div class="metric-header">
-            <span class="metric-title">Prakiraan Medan Timur</span>
-          </div>
+          <div class="metric-header"><span class="metric-title">Prakiraan Medan Timur</span></div>
           <div class="metric-value-box">
-            <span class="metric-value" id="weather-desc" style="font-size: 15px; font-family: inherit;">Memuat...</span>
+            <span class="metric-value" id="weather-desc" style="font-size: 14px; font-family: inherit;">Memuat...</span>
           </div>
-          <div class="metric-sub" id="weather-detail">Area Sekitar Kampus UMSU</div>
+          <div class="metric-sub" id="weather-detail">Stasiun Cuaca Sekitar UMSU</div>
         </div>
       </div>
     </div>
 
-    <!-- Panel Tabel -->
+    <!-- 4. Panel Tabel Riwayat Lengkap -->
     <div class="table-panel">
       <div class="toolbar">
         <div class="toolbar-left">
-          <h2>Log Telemetri</h2>
-          <p>20 entri rekaman data terakhir</p>
+          <h2>Log Telemetri Multi-Sensor</h2>
+          <p>20 entri rekaman komprehensif terakhir</p>
         </div>
         <div class="toolbar-actions">
           <button class="btn btn-delete" id="btn-clear">Hapus Log</button>
@@ -486,17 +604,17 @@
             <tr>
               <th style="width: 35px;">No</th>
               <th>Waktu</th>
-              <th>Tegangan (V)</th>
-              <th>Arus (mA)</th>
-              <th>Suhu P.A (°C)</th>
-              <th>Suhu P.B (°C)</th>
-              <th>Suhu Lingkungan (°C)</th>
-              <th>Kelembapan (%)</th>
-              <th>Kecepatan Angin (m/s)</th>
+              <th>V1 (V)</th><th>I1 (mA)</th>
+              <th>V2 (V)</th><th>I2 (mA)</th>
+              <th>V3 (V)</th><th>I3 (mA)</th>
+              <th>V4 (V)</th><th>I4 (mA)</th>
+              <th>T1 (°C)</th><th>T2 (°C)</th><th>T3 (°C)</th><th>T4 (°C)</th>
+              <th>T5 (°C)</th><th>T6 (°C)</th><th>T7 (°C)</th><th>T8 (°C)</th>
+              <th>Suhu Amb (°C)</th><th>RH (%)</th><th>Angin (m/s)</th>
             </tr>
           </thead>
           <tbody id="table-body">
-            <tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 18px; font-family: inherit;">Menunggu data dari ESP32...</td></tr>
+            <tr><td colspan="21" style="text-align: center; color: var(--text-muted); padding: 18px; font-family: inherit;">Menunggu data dari ESP32...</td></tr>
           </tbody>
         </table>
       </div>
@@ -521,7 +639,7 @@
     const clockEl = document.getElementById("live-clock");
     const btnTheme = document.getElementById("btn-theme");
 
-    // --- Mode Gelap / Terang (Dark Mode Toggle) ---
+    // Mode Gelap / Terang
     const savedTheme = localStorage.getItem("app_theme") || "light";
     document.documentElement.setAttribute("data-theme", savedTheme);
     btnTheme.innerText = savedTheme === "dark" ? "☀️" : "🌙";
@@ -534,16 +652,10 @@
       btnTheme.innerText = targetTheme === "dark" ? "☀️" : "🌙";
     });
 
-    // --- 1. Jam Digital, Hari, dan Tanggal Realtime ---
+    // Jam Realtime WIB
     function updateClock() {
       const now = new Date();
-      const options = { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric', 
-        timeZone: 'Asia/Jakarta' 
-      };
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Jakarta' };
       const datePart = now.toLocaleDateString('id-ID', options);
       const timePart = now.toLocaleTimeString('id-ID', { hour12: false, timeZone: 'Asia/Jakarta' });
       clockEl.innerText = `${datePart} • ${timePart} WIB`;
@@ -551,7 +663,7 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // --- 2. Integrasi Prakiraan Cuaca (Open-Meteo API: Medan Timur / UMSU) ---
+    // Integrasi Prakiraan Cuaca (Open-Meteo API: Medan Timur)
     async function loadWeatherForecast() {
       const descEl = document.getElementById("weather-desc");
       const detailEl = document.getElementById("weather-detail");
@@ -575,7 +687,7 @@
           else if ([95, 96, 99].includes(code)) weatherText = "Hujan Petir";
 
           descEl.innerText = `${weatherText} (${temp}°C)`;
-          detailEl.innerText = `RH: ${hum}% • Stasiun Cuaca UMSU`;
+          detailEl.innerText = `RH: ${hum}% • Stasiun Sekitar UMSU`;
         }
       } catch (err) {
         descEl.innerText = "Data Cuaca Offline";
@@ -585,7 +697,7 @@
     loadWeatherForecast();
     setInterval(loadWeatherForecast, 1800000);
 
-    // --- 3. Otentikasi Login ---
+    // Otentikasi
     if (sessionStorage.getItem("isLoggedIn") === "true") {
       bukaDashboard();
     }
@@ -618,7 +730,7 @@
       if (e.key === "Enter") btnLogin.click();
     });
 
-    // --- 4. Firebase Configuration ---
+    // Firebase Setup
     const firebaseConfig = {
       apiKey: "AIzaSyBW0pBfoAVDNdl2gf3oJa0myHRrPqmMyrg",
       authDomain: "panel-surya-7dba5.firebaseapp.com",
@@ -632,10 +744,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const voltEl = document.getElementById("tegangan");
-    const currEl = document.getElementById("arus");
-    const paEl = document.getElementById("sensor-pa");
-    const pbEl = document.getElementById("sensor-pb");
     const dhtTempEl = document.getElementById("dht-suhu");
     const dhtHumEl = document.getElementById("dht-hum");
     const windEl = document.getElementById("angin");
@@ -644,22 +752,34 @@
     const btnClear = document.getElementById("btn-clear");
     const txtStatus = document.getElementById("txt-status");
 
-    // Realtime Cards
+    // Realtime Listener
     onValue(ref(db, "monitoring/realtime"), (snap) => {
       const val = snap.val();
       if (val) {
-        voltEl.innerText    = val.tegangan !== undefined ? Number(val.tegangan).toFixed(2) : "--";
-        currEl.innerText    = val.arus !== undefined ? Number(val.arus).toFixed(1) : "--";
-        paEl.innerText      = val.sensor_pa !== undefined ? Number(val.sensor_pa).toFixed(1) : "--";
-        pbEl.innerText      = val.sensor_pb !== undefined ? Number(val.sensor_pb).toFixed(1) : "--";
-        dhtTempEl.innerText = val.suhu !== undefined ? Number(val.suhu).toFixed(1) : "--";
+        // 4x INA219 (V & I)
+        for (let i = 1; i <= 4; i++) {
+          const vEl = document.getElementById(`v${i}`);
+          const iEl = document.getElementById(`i${i}`);
+          if (vEl) vEl.innerText = val[`v${i}`] !== undefined ? Number(val[`v${i}`]).toFixed(2) : "--";
+          if (iEl) iEl.innerText = val[`i${i}`] !== undefined ? Number(val[`i${i}`]).toFixed(1) : "--";
+        }
+
+        // 8x DS18B20
+        for (let i = 1; i <= 8; i++) {
+          const tEl = document.getElementById(`t${i}`);
+          if (tEl) tEl.innerText = val[`t${i}`] !== undefined ? Number(val[`t${i}`]).toFixed(1) : "--";
+        }
+
+        // Lingkungan
+        dhtTempEl.innerText = val.suhu_lingkungan !== undefined ? Number(val.suhu_lingkungan).toFixed(1) : "--";
         dhtHumEl.innerText  = val.kelembapan !== undefined ? Number(val.kelembapan).toFixed(1) : "--";
         windEl.innerText    = val.angin !== undefined ? Number(val.angin).toFixed(2) : "--";
+        
         txtStatus.innerText = "Sinkron";
       }
     });
 
-    // Realtime Table
+    // History Table Listener
     onValue(ref(db, "monitoring/riwayat"), (snap) => {
       const data = snap.val();
       if (data) {
@@ -671,22 +791,40 @@
           html += `<tr>
             <td style="color: var(--text-muted);">${no++}</td>
             <td style="font-family: inherit; color: var(--text-muted);">${item.waktu || k}</td>
-            <td style="font-weight: 600;">${item.tegangan !== undefined ? Number(item.tegangan).toFixed(2) : "-"}</td>
-            <td style="font-weight: 600;">${item.arus !== undefined ? Number(item.arus).toFixed(1) : "-"}</td>
-            <td style="font-weight: 600;">${item.sensor_pa !== undefined ? Number(item.sensor_pa).toFixed(1) : "-"}</td>
-            <td style="font-weight: 600;">${item.sensor_pb !== undefined ? Number(item.sensor_pb).toFixed(1) : "-"}</td>
-            <td style="font-weight: 600;">${item.suhu !== undefined ? Number(item.suhu).toFixed(1) : "-"}</td>
-            <td style="font-weight: 600;">${item.kelembapan !== undefined ? Number(item.kelembapan).toFixed(1) : "-"}</td>
-            <td style="font-weight: 600;">${item.angin !== undefined ? Number(item.angin).toFixed(2) : "-"}</td>
+            
+            <td>${item.v1 !== undefined ? Number(item.v1).toFixed(2) : "-"}</td>
+            <td>${item.i1 !== undefined ? Number(item.i1).toFixed(1) : "-"}</td>
+
+            <td>${item.v2 !== undefined ? Number(item.v2).toFixed(2) : "-"}</td>
+            <td>${item.i2 !== undefined ? Number(item.i2).toFixed(1) : "-"}</td>
+
+            <td>${item.v3 !== undefined ? Number(item.v3).toFixed(2) : "-"}</td>
+            <td>${item.i3 !== undefined ? Number(item.i3).toFixed(1) : "-"}</td>
+
+            <td>${item.v4 !== undefined ? Number(item.v4).toFixed(2) : "-"}</td>
+            <td>${item.i4 !== undefined ? Number(item.i4).toFixed(1) : "-"}</td>
+
+            <td>${item.t1 !== undefined ? Number(item.t1).toFixed(1) : "-"}</td>
+            <td>${item.t2 !== undefined ? Number(item.t2).toFixed(1) : "-"}</td>
+            <td>${item.t3 !== undefined ? Number(item.t3).toFixed(1) : "-"}</td>
+            <td>${item.t4 !== undefined ? Number(item.t4).toFixed(1) : "-"}</td>
+            <td>${item.t5 !== undefined ? Number(item.t5).toFixed(1) : "-"}</td>
+            <td>${item.t6 !== undefined ? Number(item.t6).toFixed(1) : "-"}</td>
+            <td>${item.t7 !== undefined ? Number(item.t7).toFixed(1) : "-"}</td>
+            <td>${item.t8 !== undefined ? Number(item.t8).toFixed(1) : "-"}</td>
+
+            <td>${item.suhu_lingkungan !== undefined ? Number(item.suhu_lingkungan).toFixed(1) : "-"}</td>
+            <td>${item.kelembapan !== undefined ? Number(item.kelembapan).toFixed(1) : "-"}</td>
+            <td>${item.angin !== undefined ? Number(item.angin).toFixed(2) : "-"}</td>
           </tr>`;
         }
         tableBody.innerHTML = html;
       } else {
-        tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 18px; font-family: inherit;">Data riwayat kosong.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="21" style="text-align: center; color: var(--text-muted); padding: 18px; font-family: inherit;">Data riwayat kosong.</td></tr>`;
       }
     });
 
-    // CSV Download
+    // Ekspor CSV
     btnCsv.addEventListener("click", async () => {
       btnCsv.innerText = "Memproses...";
       try {
@@ -699,21 +837,23 @@
           return;
         }
 
-        let csv = "No;Waktu Transmisi;Tegangan (V);Arus (mA);Suhu Sensor P.A (C);Suhu Sensor P.B (C);Suhu Lingkungan (C);Kelembapan (%);Kecepatan Angin (m/s)\r\n";
+        let csv = "No;Waktu;V1 (V);I1 (mA);V2 (V);I2 (mA);V3 (V);I3 (mA);V4 (V);I4 (mA);T1 (C);T2 (C);T3 (C);T4 (C);T5 (C);T6 (C);T7 (C);T8 (C);Suhu Amb (C);Kelembapan (%);Kecepatan Angin (m/s)\r\n";
         let no = 1;
 
-        for (let key in data) {
-          const row = data[key];
-          const waktu = row.waktu ? row.waktu : key;
-          const v   = row.tegangan !== undefined ? String(Number(row.tegangan).toFixed(2)).replace('.', ',') : "";
-          const a   = row.arus !== undefined ? String(Number(row.arus).toFixed(1)).replace('.', ',') : "";
-          const spa = row.sensor_pa !== undefined ? String(Number(row.sensor_pa).toFixed(1)).replace('.', ',') : "";
-          const spb = row.sensor_pb !== undefined ? String(Number(row.sensor_pb).toFixed(1)).replace('.', ',') : "";
-          const st  = row.suhu !== undefined ? String(Number(row.suhu).toFixed(1)).replace('.', ',') : "";
-          const sh  = row.kelembapan !== undefined ? String(Number(row.kelembapan).toFixed(1)).replace('.', ',') : "";
-          const w   = row.angin !== undefined ? String(Number(row.angin).toFixed(2)).replace('.', ',') : "";
+        const f = (val, dec) => val !== undefined ? String(Number(val).toFixed(dec)).replace('.', ',') : "";
 
-          csv += `${no};"${waktu}";${v};${a};${spa};${spb};${st};${sh};${w}\r\n`;
+        for (let key in data) {
+          const r = data[key];
+          const waktu = r.waktu ? r.waktu : key;
+
+          csv += `${no};"${waktu}";` +
+                 `${f(r.v1, 2)};${f(r.i1, 1)};` +
+                 `${f(r.v2, 2)};${f(r.i2, 1)};` +
+                 `${f(r.v3, 2)};${f(r.i3, 1)};` +
+                 `${f(r.v4, 2)};${f(r.i4, 1)};` +
+                 `${f(r.t1, 1)};${f(r.t2, 1)};${f(r.t3, 1)};${f(r.t4, 1)};` +
+                 `${f(r.t5, 1)};${f(r.t6, 1)};${f(r.t7, 1)};${f(r.t8, 1)};` +
+                 `${f(r.suhu_lingkungan, 1)};${f(r.kelembapan, 1)};${f(r.angin, 2)}\r\n`;
           no++;
         }
 
@@ -721,7 +861,7 @@
         const downloadUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = downloadUrl;
-        link.download = `Telemetry_Report_${new Date().toISOString().slice(0, 10)}.csv`;
+        link.download = `Telemetry_MultiPV_${new Date().toISOString().slice(0, 10)}.csv`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -733,7 +873,7 @@
       }
     });
 
-    // Clear History
+    // Kosongkan Log
     btnClear.addEventListener("click", async () => {
       if (confirm("Kosongkan seluruh riwayat log di database?")) {
         await remove(ref(db, "monitoring/riwayat"));
