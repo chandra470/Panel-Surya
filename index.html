@@ -1,615 +1,581 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sistem Telemetri Panel Surya & Stasiun Cuaca</title>
+  <title>Monitoring Panel Surya</title>
+  
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Chart.js CDN for Telemetry Trends -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            },
+            dark: {
+              base: '#070d18',
+              card: '#0c162c',
+              cardHover: '#101e3d',
+              border: '#1a2a4c',
+              borderLight: '#233762'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
-    :root {
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --border: #e2e8f0;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --primary: #0f172a;
-      --primary-hover: #1e293b;
-      --table-stripe: #f8fafc;
-      --table-border: #f1f5f9;
-      --badge-bg: #f8fafc;
-      --status-bg: #f1f5f9;
-      --status-text: #334155;
-      
-      --accent-pv1: #d97706;
-      --accent-pv2: #059669;
-      --accent-pv3: #2563eb;
-      --accent-pv4: #7c3aed;
-      --accent-temp: #ea580c;
-      --accent-dht-temp: #b91c1c;
-      --accent-dht-hum: #0284c7;
-      --accent-wind: #0891b2;
-      --accent-forecast: #4f46e5;
+    /* Custom Scrollbar for Sleek Industrial Look */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.4);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.35);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 0.6);
     }
 
-    [data-theme="dark"] {
-      --bg: #0b1329;
-      --card-bg: #131f37;
-      --border: #233554;
-      --text-main: #f1f5f9;
-      --text-muted: #94a3b8;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --table-stripe: #172642;
-      --table-border: #1e2e4a;
-      --badge-bg: #0f172a;
-      --status-bg: #1e293b;
-      --status-text: #cbd5e1;
+    .glass-panel {
+      background: rgba(12, 22, 44, 0.75);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    html:not(.dark) .glass-panel {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(226, 232, 240, 0.9);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
-    body { background-color: var(--bg); color: var(--text-main); padding: 20px 16px; display: flex; justify-content: center; }
-
-    /* Modal Login */
-    #login-overlay {
-      position: fixed; inset: 0;
-      background: rgba(15, 23, 42, 0.7);
-      backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 9999;
+    .pulse-ring {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse-ring-anim 1.8s infinite cubic-bezier(0.66, 0, 0, 1);
     }
-    .login-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 28px 24px;
-      width: 100%;
-      max-width: 340px;
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2);
+    @keyframes pulse-ring-anim {
+      to {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+      }
     }
-    .login-box h2 { 
-      font-size: 16px; 
-      font-weight: 700; 
-      margin-bottom: 4px; 
-      color: var(--text-main); 
-      text-align: center;
-    }
-    .login-box p { 
-      font-size: 12px; 
-      color: var(--text-muted); 
-      margin-bottom: 20px; 
-      text-align: center;
-    }
-    .input-group { margin-bottom: 12px; }
-    .input-group label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-muted); }
-    .input-group input {
-      width: 100%;
-      padding: 8px 10px;
-      background: var(--card-bg);
-      color: var(--text-main);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 13px;
-      outline: none;
-    }
-    .input-group input:focus { border-color: var(--primary); }
-    .btn-login {
-      width: 100%;
-      padding: 9px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 6px;
-    }
-    .btn-login:hover { background: var(--primary-hover); }
-    #login-error { color: #dc2626; font-size: 11px; margin-top: 10px; text-align: center; display: none; }
-
-    /* Dashboard Layout */
-    .dashboard-container {
-      max-width: 1280px;
-      width: 100%;
-      display: none;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    /* Header Navigasi */
-    .app-header {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-    .header-info h1 { font-size: 16px; font-weight: 700; color: var(--text-main); }
-    .header-info p { font-size: 11px; color: var(--text-muted); margin-top: 2px; display: flex; gap: 6px; }
-    .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    
-    .time-badge {
-      display: flex; align-items: center; gap: 6px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      background: var(--badge-bg);
-      color: var(--text-main);
-      border: 1px solid var(--border);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* Status Badge & Online / Offline Dot */
-    .status-badge {
-      display: flex; align-items: center; gap: 6px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      background: var(--status-bg);
-      color: var(--status-text);
-      border: 1px solid var(--border);
-    }
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #94a3b8; /* Netral default */
-      transition: background-color 0.3s;
-    }
-    .status-dot.online {
-      background: #10b981;
-      box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
-      animation: pulse-green 2s infinite;
-    }
-    .status-dot.offline {
-      background: #ef4444;
-      box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
-    }
-
-    @keyframes pulse-green {
-      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
-      70% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-    }
-
-    .btn-theme {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 5px 9px;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .btn-theme:hover { background: var(--table-stripe); }
-
-    .btn-logout {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 5px 12px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .btn-logout:hover { background: var(--table-stripe); color: var(--text-main); }
-
-    .section-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    /* Grid Layouts */
-    .grid-solar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-    }
-
-    .grid-temp {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 10px;
-    }
-
-    .grid-weather {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 10px;
-    }
-
-    .metric-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-    }
-    .metric-card::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2.5px;
-    }
-    .c-pv1::before     { background: var(--accent-pv1); }
-    .c-pv2::before     { background: var(--accent-pv2); }
-    .c-pv3::before     { background: var(--accent-pv3); }
-    .c-pv4::before     { background: var(--accent-pv4); }
-    .c-temp::before    { background: var(--accent-temp); }
-    .c-dhttemp::before { background: var(--accent-dht-temp); }
-    .c-dhthum::before  { background: var(--accent-dht-hum); }
-    .c-wind::before    { background: var(--accent-wind); }
-    .c-forecast::before{ background: var(--accent-forecast); }
-
-    .metric-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    .metric-title {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--text-main);
-    }
-    .badge-sub {
-      font-size: 9.5px;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-muted);
-      background: var(--table-stripe);
-      padding: 1px 6px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-    }
-
-    /* Sub-metrics inside Solar Card */
-    .pv-metrics {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      gap: 12px;
-      padding: 4px 0;
-    }
-    .pv-sub-item {
-      display: flex;
-      flex-direction: column;
-    }
-    .pv-label {
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      margin-bottom: 2px;
-    }
-    .pv-val-box {
-      font-family: 'JetBrains Mono', monospace;
-      display: flex;
-      align-items: baseline;
-      gap: 3px;
-    }
-    .pv-val {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text-main);
-    }
-    .pv-unit {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-muted);
-    }
-
-    /* Simple Metrics Value Box */
-    .metric-value-box {
-      display: flex;
-      align-items: baseline;
-      gap: 4px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .metric-value {
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      color: var(--text-main);
-    }
-    .metric-unit {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-muted);
-    }
-    .metric-sub {
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-top: 3px;
-    }
-
-    /* Panel Riwayat Data */
-    .table-panel {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 18px 20px;
-    }
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .toolbar-left h2 { font-size: 14px; font-weight: 700; color: var(--text-main); }
-    .toolbar-left p { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-    .toolbar-actions { display: flex; gap: 8px; }
-
-    .btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      transition: all 0.15s;
-    }
-    .btn-export { background: #0f172a; color: #fff; }
-    [data-theme="dark"] .btn-export { background: #2563eb; }
-    .btn-export:hover { opacity: 0.9; }
-    .btn-delete { background: var(--card-bg); color: #dc2626; border: 1px solid #fecaca; }
-    [data-theme="dark"] .btn-delete { border-color: #7f1d1d; color: #f87171; }
-    .btn-delete:hover { background: rgba(220, 38, 38, 0.08); }
-
-    .table-wrapper {
-      max-height: 400px;
-      overflow-x: auto;
-      overflow-y: auto;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-    }
-    table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
-    thead th {
-      background: var(--table-stripe);
-      color: var(--text-muted);
-      font-weight: 600;
-      font-size: 9.5px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 9px 10px;
-      border-bottom: 1px solid var(--border);
-      position: sticky; top: 0; z-index: 2;
-      white-space: nowrap;
-    }
-    tbody td {
-      padding: 8px 10px;
-      border-bottom: 1px solid var(--table-border);
-      color: var(--text-main);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      white-space: nowrap;
-    }
-    tbody tr:hover { background: var(--table-stripe); }
   </style>
 </head>
-<body>
 
-  <!-- Modal Login -->
-  <div id="login-overlay">
-    <div class="login-box">
-      <h2>Otentikasi Sistem</h2>
-      <p>Akses log instrumen</p>
-      <div class="input-group">
-        <label>Nama Pengguna</label>
-        <input type="text" id="username" placeholder="Username" autocomplete="off" />
+<body class="bg-[#f1f5f9] dark:bg-[#060b15] text-slate-800 dark:text-slate-100 min-h-screen antialiased flex flex-col font-sans transition-colors duration-300">
+
+  <!-- Modal Login Authentication -->
+  <div id="login-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md transition-all">
+    <div class="w-full max-w-md bg-white dark:bg-[#0c162c] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-8 relative overflow-hidden">
+      <!-- Glow ambient background -->
+      <div class="absolute -top-24 -right-24 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="relative z-10 text-center mb-6">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 mb-4 shadow-inner">
+          <i data-lucide="shield-check" class="w-7 h-7"></i>
+        </div>
+        <h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Login Web</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Sistem Pemantauan Panel Surya</p>
       </div>
-      <div class="input-group">
-        <label>Kata Sandi</label>
-        <input type="password" id="password" placeholder="Password" />
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">ID Pengguna</label>
+          <div class="relative flex items-center">
+            <span class="absolute left-3 text-slate-400">
+              <i data-lucide="user" class="w-4 h-4"></i>
+            </span>
+            <input type="text" id="username" placeholder="Masukkan ID Pengguna" class="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-[#13203c] border border-slate-200 dark:border-slate-700/70 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Kata Sandi</label>
+          <div class="relative flex items-center">
+            <span class="absolute left-3 text-slate-400">
+              <i data-lucide="lock" class="w-4 h-4"></i>
+            </span>
+            <input type="password" id="password" placeholder="Masukkan Sandi Keamanan" class="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-[#13203c] border border-slate-200 dark:border-slate-700/70 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+          </div>
+        </div>
+
+        <div id="login-error" class="hidden text-xs text-red-500 dark:text-red-400 text-center font-medium bg-red-50 dark:bg-red-950/40 p-2.5 rounded-lg border border-red-200 dark:border-red-900/50">
+          Kredensial tidak valid. Silakan coba kembali.
+        </div>
+
+        <button id="btn-login" class="w-full mt-2 py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-sm shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition duration-200">
+          <span>Buka Dashboard</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+
+        <p class="text-[11px] text-center text-slate-400 dark:text-slate-500 pt-2">
+          Laboratorium Rekayasa Energi Terbarukan &bull; ESP32 Node
+        </p>
       </div>
-      <button id="btn-login" class="btn-login">Masuk</button>
-      <div id="login-error">Kredensial tidak valid.</div>
     </div>
   </div>
 
-  <!-- Dashboard Utama -->
-  <div class="dashboard-container" id="dashboard-content">
-    
-    <!-- Top Header -->
-    <header class="app-header">
-      <div class="header-info">
-        <h1>Monitoring Panel Surya</h1>
-        <p>
-          <span>ESP32 Client</span>
-          <span>&bull;</span>
-          <span>Firebase RTDB</span>
-        </p>
+  <!-- Notification Toast & Modal Message Box -->
+  <div id="custom-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="bg-white dark:bg-[#0f1b35] border border-slate-200 dark:border-slate-700 max-w-sm w-full p-6 rounded-2xl shadow-2xl text-center">
+      <div id="modal-icon" class="mx-auto w-12 h-12 flex items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-500 mb-3">
+        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
       </div>
-      <div class="header-actions">
-        <div class="time-badge" id="live-clock">--:--:-- WIB</div>
-        
-        <!-- Status Indikator -->
-        <div class="status-badge" id="badge-wrapper">
-          <span class="status-dot" id="dot-status"></span>
-          <span id="txt-status">Menghubungkan...</span>
+      <h3 id="modal-title" class="text-base font-bold mb-2">Konfirmasi Tindakan</h3>
+      <p id="modal-msg" class="text-xs text-slate-500 dark:text-slate-400 mb-5">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
+      <div class="flex gap-2">
+        <button id="modal-cancel-btn" class="flex-1 py-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Batal</button>
+        <button id="modal-confirm-btn" class="flex-1 py-2 text-xs font-semibold rounded-xl bg-red-600 text-white hover:bg-red-500 transition">Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashboard-content" class="hidden flex-col w-full max-w-[1520px] mx-auto p-3 sm:p-5 lg:p-7 gap-5 transition-all">
+    
+    <!-- Top Navigation Header -->
+    <header class="glass-panel rounded-2xl px-5 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm border">
+      <div class="flex items-center gap-3.5">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+          <i data-lucide="sun-medium" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Solar PV</h1>
+            <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">v2.5 IoT</span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5 font-mono">
+            <span class="flex items-center gap-1"><i data-lucide="cpu" class="w-3.5 h-3.5 text-blue-500"></i> </span>
+            <span>&bull;</span>
+            <span class="flex items-center gap-1"><i data-lucide="database" class="w-3.5 h-3.5 text-emerald-500"></i></span>
+            <span>&bull;</span>
+            <span class="text-emerald-500 font-semibold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 pulse-ring"></span> Online</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center flex-wrap gap-2.5 self-stretch md:self-auto justify-end">
+        <!-- Live Clock -->
+        <div class="flex items-center gap-2 bg-slate-100 dark:bg-[#111f3d] px-3.5 py-2 rounded-xl text-xs font-mono font-semibold border border-slate-200 dark:border-slate-800/80 text-slate-700 dark:text-slate-300">
+          <i data-lucide="clock" class="w-4 h-4 text-blue-500"></i>
+          <span id="live-clock">--:--:-- WIB</span>
         </div>
 
-        <button class="btn-theme" id="btn-theme" title="Ubah Mode Tampilan">🌙</button>
-        <button class="btn-logout" id="btn-logout">Logout</button>
+        <!-- Connection Status Indicator -->
+        <div class="flex items-center gap-2 bg-slate-100 dark:bg-[#111f3d] px-3.5 py-2 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-800/80">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-ring"></span>
+          <span id="txt-status" class="text-slate-700 dark:text-slate-300 font-mono text-xs">Tersambung</span>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="btn-theme" class="p-2 rounded-xl bg-slate-100 dark:bg-[#111f3d] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-blue-500 transition" title="Ganti Tema Tampilan">
+          <i data-lucide="moon" id="theme-icon" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Logout Button -->
+        <button id="btn-logout" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/60 text-xs font-semibold hover:bg-red-100 dark:hover:bg-red-900/40 transition">
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          <span>Keluar</span>
+        </button>
       </div>
     </header>
 
-    <!-- 1. Parameter Tegangan & Arus Panel Surya -->
-    <div>
-      <div class="section-label">Parameter Pembangkitan Daya PV</div>
-      <div class="grid-solar">
-        <div class="metric-card c-pv1">
-          <div class="metric-header">
-            <span class="metric-title">Panel Surya 1</span>
-            <span class="badge-sub">0x40</span>
-          </div>
-          <div class="pv-metrics">
-            <div class="pv-sub-item">
-              <span class="pv-label">Tegangan</span>
-              <div class="pv-val-box"><span class="pv-val" id="v1">--</span><span class="pv-unit">V</span></div>
-            </div>
-            <div class="pv-sub-item">
-              <span class="pv-label">Arus</span>
-              <div class="pv-val-box"><span class="pv-val" id="i1">--</span><span class="pv-unit">mA</span></div>
-            </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <!-- Total Power Generation -->
+      <div class="glass-panel p-4 rounded-2xl relative overflow-hidden group hover:border-blue-500/50 transition duration-300">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Output Daya (PV)</span>
+          <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/70 text-blue-500 flex items-center justify-center border border-blue-200 dark:border-blue-800">
+            <i data-lucide="zap" class="w-4 h-4"></i>
           </div>
         </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span id="kpi-total-power" class="text-2xl lg:text-3xl font-bold font-mono text-blue-600 dark:text-blue-400">0.00</span>
+          <span class="text-sm font-semibold text-slate-500">Watt</span>
+        </div>
+        <div class="mt-1 text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
+          <i data-lucide="calculator" class="w-3 h-3 text-blue-400"></i> Akumulasi PV 1 ~ 4 Real-time
+        </div>
+      </div>
 
-        <div class="metric-card c-pv2">
-          <div class="metric-header">
-            <span class="metric-title">Panel Surya 2</span>
-            <span class="badge-sub">0x41</span>
-          </div>
-          <div class="pv-metrics">
-            <div class="pv-sub-item">
-              <span class="pv-label">Tegangan</span>
-              <div class="pv-val-box"><span class="pv-val" id="v2">--</span><span class="pv-unit">V</span></div>
-            </div>
-            <div class="pv-sub-item">
-              <span class="pv-label">Arus</span>
-              <div class="pv-val-box"><span class="pv-val" id="i2">--</span><span class="pv-unit">mA</span></div>
-            </div>
+      <!-- Average Surface Temperature -->
+      <div class="glass-panel p-4 rounded-2xl relative overflow-hidden group hover:border-amber-500/50 transition duration-300">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Rata-rata Suhu Modul</span>
+          <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/70 text-amber-500 flex items-center justify-center border border-amber-200 dark:border-amber-800">
+            <i data-lucide="thermometer" class="w-4 h-4"></i>
           </div>
         </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span id="kpi-avg-temp" class="text-2xl lg:text-3xl font-bold font-mono text-amber-500">0.0</span>
+          <span class="text-sm font-semibold text-slate-500">°C</span>
+        </div>
+        <div class="mt-1 text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
+          <i data-lucide="layers" class="w-3 h-3 text-amber-400"></i> Mean Sensor DS18B20 (T1 - T8)
+        </div>
+      </div>
 
-        <div class="metric-card c-pv3">
-          <div class="metric-header">
-            <span class="metric-title">Panel Surya 3</span>
-            <span class="badge-sub">0x44</span>
-          </div>
-          <div class="pv-metrics">
-            <div class="pv-sub-item">
-              <span class="pv-label">Tegangan</span>
-              <div class="pv-val-box"><span class="pv-val" id="v3">--</span><span class="pv-unit">V</span></div>
-            </div>
-            <div class="pv-sub-item">
-              <span class="pv-label">Arus</span>
-              <div class="pv-val-box"><span class="pv-val" id="i3">--</span><span class="pv-unit">mA</span></div>
-            </div>
+      <!-- Weather Forecast Medan Timur / UMSU -->
+      <div class="glass-panel p-4 rounded-2xl relative overflow-hidden group hover:border-indigo-500/50 transition duration-300">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Prakiraan Cuaca UMSU</span>
+          <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/70 text-indigo-500 flex items-center justify-center border border-indigo-200 dark:border-indigo-800">
+            <i data-lucide="cloud-sun" class="w-4 h-4"></i>
           </div>
         </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span id="weather-desc" class="text-lg font-bold text-slate-800 dark:text-slate-200 truncate">Memuat...</span>
+        </div>
+        <div id="weather-detail" class="mt-1 text-[11px] text-slate-400 dark:text-slate-500 truncate">
+          Medan Timur &bull; Open-Meteo API
+        </div>
+      </div>
 
-        <div class="metric-card c-pv4">
-          <div class="metric-header">
-            <span class="metric-title">Panel Surya 4</span>
-            <span class="badge-sub">0x45</span>
+      <!-- Environment Overview -->
+      <div class="glass-panel p-4 rounded-2xl relative overflow-hidden group hover:border-emerald-500/50 transition duration-300">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Kondisi Udara Sekitar</span>
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 text-emerald-500 flex items-center justify-center border border-emerald-200 dark:border-emerald-800">
+            <i data-lucide="wind" class="w-4 h-4"></i>
           </div>
-          <div class="pv-metrics">
-            <div class="pv-sub-item">
-              <span class="pv-label">Tegangan</span>
-              <div class="pv-val-box"><span class="pv-val" id="v4">--</span><span class="pv-unit">V</span></div>
-            </div>
-            <div class="pv-sub-item">
-              <span class="pv-label">Arus</span>
-              <div class="pv-val-box"><span class="pv-val" id="i4">--</span><span class="pv-unit">mA</span></div>
-            </div>
+        </div>
+        <div class="mt-2 flex items-center gap-4">
+          <div>
+            <div class="text-[10px] text-slate-400 uppercase">Suhu Amb.</div>
+            <div class="text-base font-bold font-mono text-emerald-500"><span id="summary-ambient">--</span>°C</div>
+          </div>
+          <div class="h-7 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
+          <div>
+            <div class="text-[10px] text-slate-400 uppercase">Kelembapan</div>
+            <div class="text-base font-bold font-mono text-sky-500"><span id="summary-humidity">--</span>%</div>
+          </div>
+          <div class="h-7 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
+          <div>
+            <div class="text-[10px] text-slate-400 uppercase">Angin</div>
+            <div class="text-base font-bold font-mono text-teal-400"><span id="summary-wind">--</span> m/s</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 2. Parameter 8 Titik Suhu Permukaan Panel -->
     <div>
-      <div class="section-label">Distribusi Suhu Panel</div>
-      <div class="grid-temp">
-        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T1</span></div><div class="metric-value-box"><span class="metric-value" id="t1">--</span><span class="metric-unit">°C</span></div></div>
-        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T2</span></div><div class="metric-value-box"><span class="metric-value" id="t2">--</span><span class="metric-unit">°C</span></div></div>
-        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T3</span></div><div class="metric-value-box"><span class="metric-value" id="t3">--</span><span class="metric-unit">°C</span></div></div>
-        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T4</span></div><div class="metric-value-box"><span class="metric-value" id="t4">--</span><span class="metric-unit">°C</span></div></div>
-        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T5</span></div><div class="metric-value-box"><span class="metric-value" id="t5">--</span><span class="metric-unit">°C</span></div></div>
-        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T6</span></div><div class="metric-value-box"><span class="metric-value" id="t6">--</span><span class="metric-unit">°C</span></div></div>
-        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T7</span></div><div class="metric-value-box"><span class="metric-value" id="t7">--</span><span class="metric-unit">°C</span></div></div>
-        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T8</span></div><div class="metric-value-box"><span class="metric-value" id="t8">--</span><span class="metric-unit">°C</span></div></div>
+      <div class="flex items-center justify-between mb-2.5">
+        <div class="flex items-center gap-2">
+          <i data-lucide="sun" class="w-4 h-4 text-amber-500"></i>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Parameter Pembangkitan PV (4-Channel INA219)</h2>
+        </div>
+        <span class="text-[11px] font-mono text-slate-400">Kalkulasi Otomatis P = (V &times; I) / 1000 W</span>
       </div>
-    </div>
 
-    <!-- 3. Parameter Meteorologi & Lingkungan -->
-    <div>
-      <div class="section-label">Parameter Meteorologi & Lingkungan</div>
-      <div class="grid-weather">
-        <div class="metric-card c-dhttemp">
-          <div class="metric-header"><span class="metric-title">Suhu Lingkungan</span></div>
-          <div class="metric-value-box"><span class="metric-value" id="dht-suhu">--</span><span class="metric-unit">°C</span></div>
-          <div class="metric-sub">DHT22</div>
-        </div>
-
-        <div class="metric-card c-dhthum">
-          <div class="metric-header"><span class="metric-title">Kelembapan Udara</span></div>
-          <div class="metric-value-box"><span class="metric-value" id="dht-hum">--</span><span class="metric-unit">%</span></div>
-          <div class="metric-sub">DHT22 (RH)</div>
-        </div>
-
-        <div class="metric-card c-wind">
-          <div class="metric-header"><span class="metric-title">Kecepatan Angin</span></div>
-          <div class="metric-value-box"><span class="metric-value" id="angin">--</span><span class="metric-unit">m/s</span></div>
-          <div class="metric-sub">Anemometer</div>
-        </div>
-
-        <div class="metric-card c-forecast">
-          <div class="metric-header"><span class="metric-title">Prakiraan Medan Timur</span></div>
-          <div class="metric-value-box">
-            <span class="metric-value" id="weather-desc" style="font-size: 14px; font-family: inherit;">Memuat...</span>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <!-- Panel Surya 1 -->
+        <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-amber-500 hover:shadow-lg hover:shadow-amber-500/5 transition">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
+            <span class="text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-200">Panel Surya 1</span>
+            <span class="font-mono text-[10px] bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded border border-amber-500/20 font-bold">0x40</span>
           </div>
-          <div class="metric-sub" id="weather-detail">Stasiun Cuaca Sekitar UMSU</div>
+          <div class="grid grid-cols-2 gap-2 mt-3 text-center">
+            <div class="bg-slate-50 dark:bg-[#121e3a] p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Tegangan</span>
+              <div class="font-mono font-bold text-base text-slate-800 dark:text-slate-100 mt-0.5"><span id="v1">0.00</span> <span class="text-xs text-slate-400 font-normal">V</span></div>
+            </div>
+            <div class="bg-slate-50 dark:bg-[#121e3a] p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Arus</span>
+              <div class="font-mono font-bold text-base text-slate-800 dark:text-slate-100 mt-0.5"><span id="i1">0.0</span> <span class="text-xs text-slate-400 font-normal">mA</span></div>
+            </div>
+          </div>
+          <div class="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-xs font-mono">
+            <span class="text-slate-400 text-[11px] font-sans flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-amber-500"></i> Daya PV1:</span>
+            <span class="font-bold text-amber-500 font-mono"><span id="p1">0.00</span> W</span>
+          </div>
+        </div>
+
+        <!-- Panel Surya 2 -->
+        <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-emerald-500 hover:shadow-lg hover:shadow-emerald-500/5 transition">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
+            <span class="text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-200">Panel Surya 2</span>
+            <span class="font-mono text-[10px] bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded border border-emerald-500/20 font-bold">0x41</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-3 text-center">
+            <div class="bg-slate-50 dark:bg-[#121e3a] p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Tegangan</span>
+              <div class="font-mono font-bold text-base text-slate-800 dark:text-slate-100 mt-0.5"><span id="v2">0.00</span> <span class="text-xs text-slate-400 font-normal">V</span></div>
+            </div>
+            <div class="bg-slate-50 dark:bg-[#121e3a] p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Arus</span>
+              <div class="font-mono font-bold text-base text-slate-800 dark:text-slate-100 mt-0.5"><span id="i2">0.0</span> <span class="text-xs text-slate-400 font-normal">mA</span></div>
+            </div>
+          </div>
+          <div class="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-xs font-mono">
+            <span class="text-slate-400 text-[11px] font-sans flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-emerald-500"></i> Daya PV2:</span>
+            <span class="font-bold text-emerald-500 font-mono"><span id="p2">0.00</span> W</span>
+          </div>
+        </div>
+
+        <!-- Panel Surya 3 -->
+        <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-blue-500 hover:shadow-lg hover:shadow-blue-500/5 transition">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
+            <span class="text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-200">Panel Surya 3</span>
+            <span class="font-mono text-[10px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded border border-blue-500/20 font-bold">0x44</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-3 text-center">
+            <div class="bg-slate-50 dark:bg-[#121e3a] p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Tegangan</span>
+              <div class="font-mono font-bold text-base text-slate-800 dark:text-slate-100 mt-0.5"><span id="v3">0.00</span> <span class="text-xs text-slate-400 font-normal">V</span></div>
+            </div>
+            <div class="bg-slate-50 dark:bg-[#121e3a] p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Arus</span>
+              <div class="font-mono font-bold text-base text-slate-800 dark:text-slate-100 mt-0.5"><span id="i3">0.0</span> <span class="text-xs text-slate-400 font-normal">mA</span></div>
+            </div>
+          </div>
+          <div class="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-xs font-mono">
+            <span class="text-slate-400 text-[11px] font-sans flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-blue-500"></i> Daya PV3:</span>
+            <span class="font-bold text-blue-500 font-mono"><span id="p3">0.00</span> W</span>
+          </div>
+        </div>
+
+        <!-- Panel Surya 4 -->
+        <div class="glass-panel p-4 rounded-2xl border-t-4 border-t-purple-500 hover:shadow-lg hover:shadow-purple-500/5 transition">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
+            <span class="text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-200">Panel Surya 4</span>
+            <span class="font-mono text-[10px] bg-purple-500/10 text-purple-500 px-2 py-0.5 rounded border border-purple-500/20 font-bold">0x45</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-3 text-center">
+            <div class="bg-slate-50 dark:bg-[#121e3a] p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Tegangan</span>
+              <div class="font-mono font-bold text-base text-slate-800 dark:text-slate-100 mt-0.5"><span id="v4">0.00</span> <span class="text-xs text-slate-400 font-normal">V</span></div>
+            </div>
+            <div class="bg-slate-50 dark:bg-[#121e3a] p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+              <span class="text-[10px] text-slate-400 uppercase font-semibold">Arus</span>
+              <div class="font-mono font-bold text-base text-slate-800 dark:text-slate-100 mt-0.5"><span id="i4">0.0</span> <span class="text-xs text-slate-400 font-normal">mA</span></div>
+            </div>
+          </div>
+          <div class="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-xs font-mono">
+            <span class="text-slate-400 text-[11px] font-sans flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-purple-500"></i> Daya PV4:</span>
+            <span class="font-bold text-purple-500 font-mono"><span id="p4">0.00</span> W</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 4. Panel Tabel Riwayat Lengkap -->
-    <div class="table-panel">
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <h2>Log Telemetri Multi-Sensor</h2>
-          <p>20 entri rekaman komprehensif terakhir</p>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      
+      <!-- Real-time Chart (7 Columns on Large Displays) -->
+      <div class="lg:col-span-7 glass-panel p-5 rounded-2xl flex flex-col justify-between">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <i data-lucide="line-chart" class="w-4 h-4 text-blue-500"></i>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Tren Real-time Pembangkitan Daya (W)</h2>
+          </div>
+          <span class="text-[11px] text-slate-400 font-mono">10 Titik Sampel Terkini</span>
         </div>
-        <div class="toolbar-actions">
-          <button class="btn btn-delete" id="btn-clear">Hapus Log</button>
-          <button class="btn btn-export" id="btn-csv">Ekspor CSV</button>
+        <div class="w-full h-56">
+          <canvas id="trendChart"></canvas>
         </div>
       </div>
 
-      <div class="table-wrapper">
-        <table>
-          <thead>
+      <!-- 8-Point Surface Temperature Distribution (5 Columns on Large Displays) -->
+      <div class="lg:col-span-5 glass-panel p-5 rounded-2xl flex flex-col">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="thermometer-snowflake" class="w-4 h-4 text-amber-500"></i>
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Distribusi 8 Titik Suhu Panel (°C)</h2>
+          </div>
+          <span class="text-[10px] font-mono text-slate-400">DS18B20 Array</span>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2.5 my-auto">
+          <!-- T1 to T8 Cards -->
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">T1</span>
+            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t1">--</span><span class="text-xs font-normal">°</span></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">T2</span>
+            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t2">--</span><span class="text-xs font-normal">°</span></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">T3</span>
+            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t3">--</span><span class="text-xs font-normal">°</span></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">T4</span>
+            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t4">--</span><span class="text-xs font-normal">°</span></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">T5</span>
+            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t5">--</span><span class="text-xs font-normal">°</span></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">T6</span>
+            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t6">--</span><span class="text-xs font-normal">°</span></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">T7</span>
+            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t7">--</span><span class="text-xs font-normal">°</span></div>
+          </div>
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+            <span class="text-[10px] text-slate-400 uppercase font-semibold">T8</span>
+            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t8">--</span><span class="text-xs font-normal">°</span></div>
+          </div>
+        </div>
+
+        <div class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+          <span>Deviasi Termal Termotoleran:</span>
+          <span class="font-mono font-semibold text-slate-700 dark:text-slate-300" id="temp-spread">-- °C</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="flex items-center gap-2 mb-2.5">
+        <i data-lucide="cloud" class="w-4 h-4 text-cyan-500"></i>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Parameter Sensor Lingkungan Terintegrasi</h2>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <!-- Ambient Temperature DHT22 -->
+        <div class="glass-panel p-4 rounded-2xl border-l-4 border-l-orange-500 flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-semibold uppercase text-slate-400">Suhu Lingkungan (DHT22)</span>
+            <div class="font-mono text-2xl font-bold text-orange-500 mt-1">
+              <span id="dht-suhu">--</span> <span class="text-sm font-normal text-slate-400">°C</span>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-1">Ambient Weather Node</div>
+          </div>
+          <div class="w-11 h-11 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center border border-orange-500/20">
+            <i data-lucide="sun-snow" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <!-- Ambient Humidity DHT22 -->
+        <div class="glass-panel p-4 rounded-2xl border-l-4 border-l-sky-500 flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-semibold uppercase text-slate-400">Kelembapan Udara (RH)</span>
+            <div class="font-mono text-2xl font-bold text-sky-500 mt-1">
+              <span id="dht-hum">--</span> <span class="text-sm font-normal text-slate-400">%</span>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-1">Hygrometer Sensor</div>
+          </div>
+          <div class="w-11 h-11 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center border border-sky-500/20">
+            <i data-lucide="droplets" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <!-- Wind Speed Anemometer -->
+        <div class="glass-panel p-4 rounded-2xl border-l-4 border-l-cyan-500 flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-semibold uppercase text-slate-400">Kecepatan Angin</span>
+            <div class="font-mono text-2xl font-bold text-cyan-500 mt-1">
+              <span id="angin">--</span> <span class="text-sm font-normal text-slate-400">m/s</span>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-1">Pulse Anemometer</div>
+          </div>
+          <div class="w-11 h-11 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center border border-cyan-500/20">
+            <i data-lucide="wind" class="w-5 h-5"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-panel rounded-2xl p-5 shadow-sm border">
+      <!-- Toolbar -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <i data-lucide="table" class="w-4 h-4 text-blue-500"></i>
+            <h2 class="text-sm font-bold text-slate-800 dark:text-white">Log Telemetri Multi-Sensor (Real-time Records)</h2>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">Menampilkan 20 rekam data komprehensif terakhir yang tersinkronisasi ke Firebase</p>
+        </div>
+
+        <div class="flex items-center gap-2 self-stretch sm:self-auto">
+          <!-- Reset / Delete Log -->
+          <button id="btn-clear" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:hover:bg-red-900/60 dark:text-red-400 border border-red-200 dark:border-red-900/50 transition">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Hapus Log</span>
+          </button>
+          
+          <!-- Export CSV -->
+          <button id="btn-csv" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-500/20 transition">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
+            <span>Ekspor CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Table Wrapper with horizontal & vertical scroll -->
+      <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800/80 max-h-[420px]">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead class="sticky top-0 z-10 bg-slate-100/90 dark:bg-[#101c38]/90 backdrop-blur-md text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
             <tr>
-              <th style="width: 35px;">No</th>
-              <th>Waktu</th>
-              <th>V1 (V)</th><th>I1 (mA)</th>
-              <th>V2 (V)</th><th>I2 (mA)</th>
-              <th>V3 (V)</th><th>I3 (mA)</th>
-              <th>V4 (V)</th><th>I4 (mA)</th>
-              <th>T1 (°C)</th><th>T2 (°C)</th><th>T3 (°C)</th><th>T4 (°C)</th>
-              <th>T5 (°C)</th><th>T6 (°C)</th><th>T7 (°C)</th><th>T8 (°C)</th>
-              <th>Suhu Amb (°C)</th><th>RH (%)</th><th>Angin (m/s)</th>
+              <th class="py-3 px-3 w-10 text-center">No</th>
+              <th class="py-3 px-3 whitespace-nowrap">Waktu</th>
+              <th class="py-3 px-3 whitespace-nowrap text-amber-500">V1 (V)</th>
+              <th class="py-3 px-3 whitespace-nowrap text-amber-500">I1 (mA)</th>
+              <th class="py-3 px-3 whitespace-nowrap text-emerald-500">V2 (V)</th>
+              <th class="py-3 px-3 whitespace-nowrap text-emerald-500">I2 (mA)</th>
+              <th class="py-3 px-3 whitespace-nowrap text-blue-500">V3 (V)</th>
+              <th class="py-3 px-3 whitespace-nowrap text-blue-500">I3 (mA)</th>
+              <th class="py-3 px-3 whitespace-nowrap text-purple-500">V4 (V)</th>
+              <th class="py-3 px-3 whitespace-nowrap text-purple-500">I4 (mA)</th>
+              <th class="py-3 px-2 whitespace-nowrap text-slate-400">T1</th>
+              <th class="py-3 px-2 whitespace-nowrap text-slate-400">T2</th>
+              <th class="py-3 px-2 whitespace-nowrap text-slate-400">T3</th>
+              <th class="py-3 px-2 whitespace-nowrap text-slate-400">T4</th>
+              <th class="py-3 px-2 whitespace-nowrap text-slate-400">T5</th>
+              <th class="py-3 px-2 whitespace-nowrap text-slate-400">T6</th>
+              <th class="py-3 px-2 whitespace-nowrap text-slate-400">T7</th>
+              <th class="py-3 px-2 whitespace-nowrap text-slate-400">T8</th>
+              <th class="py-3 px-3 whitespace-nowrap text-orange-400">Suhu (°C)</th>
+              <th class="py-3 px-3 whitespace-nowrap text-sky-400">RH (%)</th>
+              <th class="py-3 px-3 whitespace-nowrap text-cyan-400">Angin (m/s)</th>
             </tr>
           </thead>
-          <tbody id="table-body">
-            <tr><td colspan="21" style="text-align: center; color: var(--text-muted); padding: 18px; font-family: inherit;">Menunggu data dari ESP32...</td></tr>
+          <tbody id="table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono text-[11px]">
+            <tr>
+              <td colspan="21" class="py-8 text-center text-slate-400 font-sans">
+                <div class="flex flex-col items-center justify-center gap-2">
+                  <i data-lucide="loader" class="w-6 h-6 animate-spin text-blue-500"></i>
+                  <span>Menghubungkan ke ESP32 Firebase RTDB...</span>
+                </div>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
+
+    <!-- Footer Copyright -->
+    <footer class="text-center text-xs text-slate-400 py-2">
+      Sistem Monitoring SCADA Telemetri Panel Surya & Stasiun Cuaca IoT &copy; Universitas Muhammadiyah Sumatera Utara (UMSU)
+    </footer>
 
   </div>
 
@@ -617,9 +583,14 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Authentication Credentials
     const AUTH_USER = "admin";
     const AUTH_PASS = "surya123";
 
+    // DOM Elements
     const overlay = document.getElementById("login-overlay");
     const dashboard = document.getElementById("dashboard-content");
     const btnLogin = document.getElementById("btn-login");
@@ -629,24 +600,135 @@
     const loginError = document.getElementById("login-error");
     const clockEl = document.getElementById("live-clock");
     const btnTheme = document.getElementById("btn-theme");
+    const themeIcon = document.getElementById("theme-icon");
+    const txtStatus = document.getElementById("txt-status");
 
-    // Mode Gelap / Terang
-    const savedTheme = localStorage.getItem("app_theme") || "light";
-    document.documentElement.setAttribute("data-theme", savedTheme);
-    btnTheme.innerText = savedTheme === "dark" ? "☀️" : "🌙";
+    // Modal Alert elements
+    const customModal = document.getElementById("custom-modal");
+    const modalTitle = document.getElementById("modal-title");
+    const modalMsg = document.getElementById("modal-msg");
+    const modalConfirmBtn = document.getElementById("modal-confirm-btn");
+    const modalCancelBtn = document.getElementById("modal-cancel-btn");
+
+    // Chart.js Context and Instance
+    let trendChartInstance = null;
+    const chartLabels = [];
+    const chartPV1 = [];
+    const chartPV2 = [];
+    const chartPV3 = [];
+    const chartPV4 = [];
+
+    function initTrendChart() {
+      const ctx = document.getElementById('trendChart');
+      if (!ctx) return;
+      const isDark = document.documentElement.classList.contains("dark");
+      const gridColor = isDark ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.06)";
+      const textColor = isDark ? "#94a3b8" : "#64748b";
+
+      trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: chartLabels,
+          datasets: [
+            {
+              label: 'PV 1 (W)',
+              data: chartPV1,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              tension: 0.35,
+              borderWidth: 2,
+              pointRadius: 2,
+            },
+            {
+              label: 'PV 2 (W)',
+              data: chartPV2,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              tension: 0.35,
+              borderWidth: 2,
+              pointRadius: 2,
+            },
+            {
+              label: 'PV 3 (W)',
+              data: chartPV3,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              tension: 0.35,
+              borderWidth: 2,
+              pointRadius: 2,
+            },
+            {
+              label: 'PV 4 (W)',
+              data: chartPV4,
+              borderColor: '#a855f7',
+              backgroundColor: 'rgba(168, 85, 247, 0.1)',
+              tension: 0.35,
+              borderWidth: 2,
+              pointRadius: 2,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                color: textColor,
+                font: { family: 'Plus Jakarta Sans', size: 11 }
+              }
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: gridColor },
+              ticks: { color: textColor, font: { family: 'JetBrains Mono', size: 10 } }
+            },
+            y: {
+              grid: { color: gridColor },
+              ticks: { color: textColor, font: { family: 'JetBrains Mono', size: 10 } },
+              suggestedMin: 0
+            }
+          }
+        }
+      });
+    }
+
+    function updateThemeUI(theme) {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        themeIcon.setAttribute("data-lucide", "sun");
+      } else {
+        document.documentElement.classList.remove('dark');
+        themeIcon.setAttribute("data-lucide", "moon");
+      }
+      lucide.createIcons();
+      if (trendChartInstance) {
+        trendChartInstance.destroy();
+        initTrendChart();
+      }
+    }
+
+    // Apply Saved Theme
+    const currentTheme = localStorage.getItem("app_theme") || "dark";
+    updateThemeUI(currentTheme);
 
     btnTheme.addEventListener("click", () => {
-      const currentTheme = document.documentElement.getAttribute("data-theme");
-      const targetTheme = currentTheme === "dark" ? "light" : "dark";
-      document.documentElement.setAttribute("data-theme", targetTheme);
-      localStorage.setItem("app_theme", targetTheme);
-      btnTheme.innerText = targetTheme === "dark" ? "☀️" : "🌙";
+      const isDark = document.documentElement.classList.contains("dark");
+      const nextTheme = isDark ? "light" : "dark";
+      localStorage.setItem("app_theme", nextTheme);
+      updateThemeUI(nextTheme);
     });
 
-    // Jam Realtime WIB
+    // Clock WIB (Asia/Jakarta)
     function updateClock() {
       const now = new Date();
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Jakarta' };
+      const options = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' };
       const datePart = now.toLocaleDateString('id-ID', options);
       const timePart = now.toLocaleTimeString('id-ID', { hour12: false, timeZone: 'Asia/Jakarta' });
       clockEl.innerText = `${datePart} • ${timePart} WIB`;
@@ -654,7 +736,6 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Integrasi Prakiraan Cuaca
     async function loadWeatherForecast() {
       const descEl = document.getElementById("weather-desc");
       const detailEl = document.getElementById("weather-detail");
@@ -678,7 +759,7 @@
           else if ([95, 96, 99].includes(code)) weatherText = "Hujan Petir";
 
           descEl.innerText = `${weatherText} (${temp}°C)`;
-          detailEl.innerText = `RH: ${hum}% • Stasiun Sekitar UMSU`;
+          detailEl.innerText = `RH: ${hum}% • Stasiun Sekitar Medan Timur (UMSU)`;
         }
       } catch (err) {
         descEl.innerText = "Data Cuaca Offline";
@@ -688,23 +769,51 @@
     loadWeatherForecast();
     setInterval(loadWeatherForecast, 1800000);
 
-    // Otentikasi
-    if (sessionStorage.getItem("isLoggedIn") === "true") {
-      bukaDashboard();
+    function showModalDialog(title, message, onConfirm) {
+      modalTitle.innerText = title;
+      modalMsg.innerText = message;
+      customModal.classList.remove('hidden');
+      customModal.classList.add('flex');
+
+      const handleConfirm = () => {
+        customModal.classList.add('hidden');
+        customModal.classList.remove('flex');
+        modalConfirmBtn.removeEventListener('click', handleConfirm);
+        onConfirm();
+      };
+
+      const handleCancel = () => {
+        customModal.classList.add('hidden');
+        customModal.classList.remove('flex');
+        modalCancelBtn.removeEventListener('click', handleCancel);
+      };
+
+      modalConfirmBtn.onclick = handleConfirm;
+      modalCancelBtn.onclick = handleCancel;
     }
 
     function bukaDashboard() {
       overlay.style.display = "none";
-      dashboard.style.display = "flex";
+      dashboard.classList.remove("hidden");
+      dashboard.classList.add("flex");
+      if (!trendChartInstance) {
+        initTrendChart();
+      }
+      lucide.createIcons();
     }
 
     function tutupDashboard() {
       sessionStorage.removeItem("isLoggedIn");
       overlay.style.display = "flex";
-      dashboard.style.display = "none";
+      dashboard.classList.add("hidden");
+      dashboard.classList.remove("flex");
       passInput.value = "";
       userInput.value = "";
-      loginError.style.display = "none";
+      loginError.classList.add("hidden");
+    }
+
+    if (sessionStorage.getItem("isLoggedIn") === "true") {
+      bukaDashboard();
     }
 
     btnLogin.addEventListener("click", () => {
@@ -712,16 +821,19 @@
         sessionStorage.setItem("isLoggedIn", "true");
         bukaDashboard();
       } else {
-        loginError.style.display = "block";
+        loginError.classList.remove("hidden");
       }
     });
 
     btnLogout.addEventListener("click", tutupDashboard);
+    
     passInput.addEventListener("keyup", (e) => {
       if (e.key === "Enter") btnLogin.click();
     });
+    userInput.addEventListener("keyup", (e) => {
+      if (e.key === "Enter") passInput.focus();
+    });
 
-    // Firebase Setup
     const firebaseConfig = {
       apiKey: "AIzaSyBW0pBfoAVDNdl2gf3oJa0myHRrPqmMyrg",
       authDomain: "panel-surya-7dba5.firebaseapp.com",
@@ -735,89 +847,110 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // Weather elements
     const dhtTempEl = document.getElementById("dht-suhu");
     const dhtHumEl = document.getElementById("dht-hum");
     const windEl = document.getElementById("angin");
+    const summaryAmb = document.getElementById("summary-ambient");
+    const summaryHum = document.getElementById("summary-humidity");
+    const summaryWind = document.getElementById("summary-wind");
     const tableBody = document.getElementById("table-body");
     const btnCsv = document.getElementById("btn-csv");
     const btnClear = document.getElementById("btn-clear");
-    const txtStatus = document.getElementById("txt-status");
-    const dotStatus = document.getElementById("dot-status");
+    const kpiTotalPower = document.getElementById("kpi-total-power");
+    const kpiAvgTemp = document.getElementById("kpi-avg-temp");
+    const tempSpreadEl = document.getElementById("temp-spread");
 
-    // ==========================================
-    // LOGIKA INDIKATOR STATUS ONLINE / OFFLINE
-    // ==========================================
-    let lastDataReceivedTimestamp = null;
-    let isFirebaseConnected = false;
-    const HEARTBEAT_TIMEOUT_MS = 15000; // Jika dalam 15 detik ESP32 tidak kirim data, set Offline
-
-    function setStatus(isOnline, label) {
-      if (isOnline) {
-        dotStatus.className = "status-dot online";
-        txtStatus.innerText = label || "Online";
-        txtStatus.style.color = "#10b981";
-      } else {
-        dotStatus.className = "status-dot offline";
-        txtStatus.innerText = label || "Offline";
-        txtStatus.style.color = "#ef4444";
-      }
-    }
-
-    // 1. Cek Koneksi Klien Web ke Server Firebase
-    onValue(ref(db, ".info/connected"), (snap) => {
-      isFirebaseConnected = snap.val() === true;
-      if (!isFirebaseConnected) {
-        setStatus(false, "Server Terputus");
-      }
-    });
-
-    // 2. Watchdog Heartbeat: Cek apakah ESP32 aktif mengirimkan data
-    setInterval(() => {
-      if (!isFirebaseConnected) return;
-
-      if (!lastDataReceivedTimestamp) {
-        setStatus(false, "Menunggu Data...");
-        return;
-      }
-
-      const diff = Date.now() - lastDataReceivedTimestamp;
-      if (diff > HEARTBEAT_TIMEOUT_MS) {
-        setStatus(false, "Alat Offline");
-      } else {
-        setStatus(true, "Online");
-      }
-    }, 2000);
-
-    // Realtime Data Listener
+    // Real-time telemetry data listener
     onValue(ref(db, "monitoring/realtime"), (snap) => {
       const val = snap.val();
-      if (val) {
-        // Tandai timestamp data terakhir masuk
-        lastDataReceivedTimestamp = Date.now();
-        setStatus(true, "Online");
+      if (!val) return;
 
-        // 4x INA219 (V & I)
-        for (let i = 1; i <= 4; i++) {
-          const vEl = document.getElementById(`v${i}`);
-          const iEl = document.getElementById(`i${i}`);
-          if (vEl) vEl.innerText = val[`v${i}`] !== undefined ? Number(val[`v${i}`]).toFixed(2) : "--";
-          if (iEl) iEl.innerText = val[`i${i}`] !== undefined ? Number(val[`i${i}`]).toFixed(1) : "--";
+      let totalPower = 0;
+
+      // 4x INA219 (V & I) + Automatic Power Calculation P = (V * I) / 1000 W
+      for (let i = 1; i <= 4; i++) {
+        const v = val[`v${i}`] !== undefined ? Number(val[`v${i}`]) : 0;
+        const current_mA = val[`i${i}`] !== undefined ? Number(val[`i${i}`]) : 0;
+        const power_W = (v * current_mA) / 1000;
+        totalPower += power_W;
+
+        const vEl = document.getElementById(`v${i}`);
+        const iEl = document.getElementById(`i${i}`);
+        const pEl = document.getElementById(`p${i}`);
+
+        if (vEl) vEl.innerText = v.toFixed(2);
+        if (iEl) iEl.innerText = current_mA.toFixed(1);
+        if (pEl) pEl.innerText = power_W.toFixed(2);
+      }
+
+      kpiTotalPower.innerText = totalPower.toFixed(2);
+
+      // 8x DS18B20 Module surface temperatures
+      let sumTemp = 0;
+      let countTemp = 0;
+      let minTemp = Infinity;
+      let maxTemp = -Infinity;
+
+      for (let i = 1; i <= 8; i++) {
+        const tEl = document.getElementById(`t${i}`);
+        const rawT = val[`t${i}`];
+        if (rawT !== undefined && rawT !== null) {
+          const tVal = Number(rawT);
+          if (tEl) tEl.innerText = tVal.toFixed(1);
+          sumTemp += tVal;
+          countTemp++;
+          if (tVal < minTemp) minTemp = tVal;
+          if (tVal > maxTemp) maxTemp = tVal;
+        } else {
+          if (tEl) tEl.innerText = "--";
+        }
+      }
+
+      if (countTemp > 0) {
+        kpiAvgTemp.innerText = (sumTemp / countTemp).toFixed(1);
+        const spread = maxTemp - minTemp;
+        if (tempSpreadEl) tempSpreadEl.innerText = `Δ ${spread.toFixed(1)} °C (${minTemp.toFixed(1)}° - ${maxTemp.toFixed(1)}°)`;
+      }
+
+      // Meteorology DHT22 & Anemometer
+      const envTemp = val.suhu_lingkungan !== undefined ? Number(val.suhu_lingkungan).toFixed(1) : "--";
+      const envHum = val.kelembapan !== undefined ? Number(val.kelembapan).toFixed(1) : "--";
+      const envWind = val.angin !== undefined ? Number(val.angin).toFixed(2) : "--";
+
+      dhtTempEl.innerText = envTemp;
+      dhtHumEl.innerText = envHum;
+      windEl.innerText = envWind;
+
+      summaryAmb.innerText = envTemp;
+      summaryHum.innerText = envHum;
+      summaryWind.innerText = envWind;
+
+      txtStatus.innerText = "Sinkron (Aktif)";
+
+      // Update Chart real-time points
+      if (trendChartInstance) {
+        const now = new Date();
+        const timeLabel = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+        
+        if (chartLabels.length >= 10) {
+          chartLabels.shift();
+          chartPV1.shift();
+          chartPV2.shift();
+          chartPV3.shift();
+          chartPV4.shift();
         }
 
-        // 8x DS18B20
-        for (let i = 1; i <= 8; i++) {
-          const tEl = document.getElementById(`t${i}`);
-          if (tEl) tEl.innerText = val[`t${i}`] !== undefined ? Number(val[`t${i}`]).toFixed(1) : "--";
-        }
+        chartLabels.push(timeLabel);
+        chartPV1.push(((Number(val.v1 || 0) * Number(val.i1 || 0)) / 1000).toFixed(2));
+        chartPV2.push(((Number(val.v2 || 0) * Number(val.i2 || 0)) / 1000).toFixed(2));
+        chartPV3.push(((Number(val.v3 || 0) * Number(val.i3 || 0)) / 1000).toFixed(2));
+        chartPV4.push(((Number(val.v4 || 0) * Number(val.i4 || 0)) / 1000).toFixed(2));
 
-        // Lingkungan
-        dhtTempEl.innerText = val.suhu_lingkungan !== undefined ? Number(val.suhu_lingkungan).toFixed(1) : "--";
-        dhtHumEl.innerText  = val.kelembapan !== undefined ? Number(val.kelembapan).toFixed(1) : "--";
-        windEl.innerText    = val.angin !== undefined ? Number(val.angin).toFixed(2) : "--";
+        trendChartInstance.update();
       }
     });
 
-    // History Table Listener
     onValue(ref(db, "monitoring/riwayat"), (snap) => {
       const data = snap.val();
       if (data) {
@@ -826,52 +959,69 @@
         const keys = Object.keys(data).slice(-20).reverse();
         for (let k of keys) {
           const item = data[k];
-          html += `<tr>
-            <td style="color: var(--text-muted);">${no++}</td>
-            <td style="font-family: inherit; color: var(--text-muted);">${item.waktu || k}</td>
-            
-            <td>${item.v1 !== undefined ? Number(item.v1).toFixed(2) : "-"}</td>
-            <td>${item.i1 !== undefined ? Number(item.i1).toFixed(1) : "-"}</td>
+          html += `
+            <tr class="hover:bg-slate-50 dark:hover:bg-[#121f3f] transition-colors">
+              <td class="py-2.5 px-3 text-center text-slate-400 font-semibold">${no++}</td>
+              <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">${item.waktu || k}</td>
+              
+              <td class="py-2.5 px-3 text-amber-500 font-medium">${item.v1 !== undefined ? Number(item.v1).toFixed(2) : "-"}</td>
+              <td class="py-2.5 px-3 text-amber-500 font-medium">${item.i1 !== undefined ? Number(item.i1).toFixed(1) : "-"}</td>
 
-            <td>${item.v2 !== undefined ? Number(item.v2).toFixed(2) : "-"}</td>
-            <td>${item.i2 !== undefined ? Number(item.i2).toFixed(1) : "-"}</td>
+              <td class="py-2.5 px-3 text-emerald-500 font-medium">${item.v2 !== undefined ? Number(item.v2).toFixed(2) : "-"}</td>
+              <td class="py-2.5 px-3 text-emerald-500 font-medium">${item.i2 !== undefined ? Number(item.i2).toFixed(1) : "-"}</td>
 
-            <td>${item.v3 !== undefined ? Number(item.v3).toFixed(2) : "-"}</td>
-            <td>${item.i3 !== undefined ? Number(item.i3).toFixed(1) : "-"}</td>
+              <td class="py-2.5 px-3 text-blue-500 font-medium">${item.v3 !== undefined ? Number(item.v3).toFixed(2) : "-"}</td>
+              <td class="py-2.5 px-3 text-blue-500 font-medium">${item.i3 !== undefined ? Number(item.i3).toFixed(1) : "-"}</td>
 
-            <td>${item.v4 !== undefined ? Number(item.v4).toFixed(2) : "-"}</td>
-            <td>${item.i4 !== undefined ? Number(item.i4).toFixed(1) : "-"}</td>
+              <td class="py-2.5 px-3 text-purple-500 font-medium">${item.v4 !== undefined ? Number(item.v4).toFixed(2) : "-"}</td>
+              <td class="py-2.5 px-3 text-purple-500 font-medium">${item.i4 !== undefined ? Number(item.i4).toFixed(1) : "-"}</td>
 
-            <td>${item.t1 !== undefined ? Number(item.t1).toFixed(1) : "-"}</td>
-            <td>${item.t2 !== undefined ? Number(item.t2).toFixed(1) : "-"}</td>
-            <td>${item.t3 !== undefined ? Number(item.t3).toFixed(1) : "-"}</td>
-            <td>${item.t4 !== undefined ? Number(item.t4).toFixed(1) : "-"}</td>
-            <td>${item.t5 !== undefined ? Number(item.t5).toFixed(1) : "-"}</td>
-            <td>${item.t6 !== undefined ? Number(item.t6).toFixed(1) : "-"}</td>
-            <td>${item.t7 !== undefined ? Number(item.t7).toFixed(1) : "-"}</td>
-            <td>${item.t8 !== undefined ? Number(item.t8).toFixed(1) : "-"}</td>
+              <td class="py-2.5 px-2 text-slate-400">${item.t1 !== undefined ? Number(item.t1).toFixed(1) : "-"}</td>
+              <td class="py-2.5 px-2 text-slate-400">${item.t2 !== undefined ? Number(item.t2).toFixed(1) : "-"}</td>
+              <td class="py-2.5 px-2 text-slate-400">${item.t3 !== undefined ? Number(item.t3).toFixed(1) : "-"}</td>
+              <td class="py-2.5 px-2 text-slate-400">${item.t4 !== undefined ? Number(item.t4).toFixed(1) : "-"}</td>
+              <td class="py-2.5 px-2 text-slate-400">${item.t5 !== undefined ? Number(item.t5).toFixed(1) : "-"}</td>
+              <td class="py-2.5 px-2 text-slate-400">${item.t6 !== undefined ? Number(item.t6).toFixed(1) : "-"}</td>
+              <td class="py-2.5 px-2 text-slate-400">${item.t7 !== undefined ? Number(item.t7).toFixed(1) : "-"}</td>
+              <td class="py-2.5 px-2 text-slate-400">${item.t8 !== undefined ? Number(item.t8).toFixed(1) : "-"}</td>
 
-            <td>${item.suhu_lingkungan !== undefined ? Number(item.suhu_lingkungan).toFixed(1) : "-"}</td>
-            <td>${item.kelembapan !== undefined ? Number(item.kelembapan).toFixed(1) : "-"}</td>
-            <td>${item.angin !== undefined ? Number(item.angin).toFixed(2) : "-"}</td>
-          </tr>`;
+              <td class="py-2.5 px-3 text-orange-400">${item.suhu_lingkungan !== undefined ? Number(item.suhu_lingkungan).toFixed(1) : "-"}</td>
+              <td class="py-2.5 px-3 text-sky-400">${item.kelembapan !== undefined ? Number(item.kelembapan).toFixed(1) : "-"}</td>
+              <td class="py-2.5 px-3 text-cyan-400">${item.angin !== undefined ? Number(item.angin).toFixed(2) : "-"}</td>
+            </tr>
+          `;
         }
         tableBody.innerHTML = html;
       } else {
-        tableBody.innerHTML = `<tr><td colspan="21" style="text-align: center; color: var(--text-muted); padding: 18px; font-family: inherit;">Data riwayat kosong.</td></tr>`;
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="21" class="py-8 text-center text-slate-400 font-sans">
+              <div class="flex flex-col items-center justify-center gap-1">
+                <i data-lucide="inbox" class="w-7 h-7 text-slate-500"></i>
+                <span class="text-xs">Data riwayat masih kosong pada database.</span>
+              </div>
+            </td>
+          </tr>
+        `;
+        lucide.createIcons();
       }
     });
 
-    // Ekspor CSV
     btnCsv.addEventListener("click", async () => {
-      btnCsv.innerText = "Memproses...";
+      btnCsv.disabled = true;
+      const originalText = btnCsv.innerHTML;
+      btnCsv.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>Memproses...</span>`;
+      lucide.createIcons();
+
       try {
         const snap = await get(ref(db, "monitoring/riwayat"));
         const data = snap.val();
 
         if (!data) {
-          alert("Tidak ada data riwayat di database.");
-          btnCsv.innerText = "Ekspor CSV";
+          showModalDialog("Data Riwayat Kosong", "Tidak ada log rekaman telemetri di database untuk diekspor ke CSV.", () => {});
+          btnCsv.innerHTML = originalText;
+          btnCsv.disabled = false;
+          lucide.createIcons();
           return;
         }
 
@@ -899,23 +1049,32 @@
         const downloadUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = downloadUrl;
-        link.download = `Telemetry_MultiPV_${new Date().toISOString().slice(0, 10)}.csv`;
+        link.download = `Telemetry_SCADA_Solar_${new Date().toISOString().slice(0, 10)}.csv`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
 
-        btnCsv.innerText = "Ekspor CSV";
       } catch (err) {
-        alert("Gagal mengunduh: " + err.message);
-        btnCsv.innerText = "Ekspor CSV";
+        showModalDialog("Gagal Mengekspor", "Terjadi kesalahan saat mengunduh CSV: " + err.message, () => {});
+      } finally {
+        btnCsv.innerHTML = originalText;
+        btnCsv.disabled = false;
+        lucide.createIcons();
       }
     });
 
-    // Kosongkan Log
-    btnClear.addEventListener("click", async () => {
-      if (confirm("Kosongkan seluruh riwayat log di database?")) {
-        await remove(ref(db, "monitoring/riwayat"));
-      }
+    btnClear.addEventListener("click", () => {
+      showModalDialog(
+        "Hapus Riwayat Log?",
+        "Tindakan ini akan mengosongkan seluruh log rekaman telemetri di Firebase RTDB secara permanen.",
+        async () => {
+          try {
+            await remove(ref(db, "monitoring/riwayat"));
+          } catch (err) {
+            console.error("Gagal menghapus riwayat:", err);
+          }
+        }
+      );
     });
   </script>
 </body>
