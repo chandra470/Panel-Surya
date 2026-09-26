@@ -73,13 +73,13 @@
       font-weight: 700; 
       margin-bottom: 4px; 
       color: var(--text-main); 
-      text-align: center; /* Rata Tengah */
+      text-align: center;
     }
     .login-box p { 
       font-size: 12px; 
       color: var(--text-muted); 
       margin-bottom: 20px; 
-      text-align: center; /* Rata Tengah */
+      text-align: center;
     }
     .input-group { margin-bottom: 12px; }
     .input-group label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-muted); }
@@ -146,6 +146,7 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
+    /* Status Badge & Online / Offline Dot */
     .status-badge {
       display: flex; align-items: center; gap: 6px;
       padding: 4px 10px;
@@ -157,8 +158,24 @@
       border: 1px solid var(--border);
     }
     .status-dot {
-      width: 6px; height: 6px; border-radius: 50%;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #94a3b8; /* Netral default */
+      transition: background-color 0.3s;
+    }
+    .status-dot.online {
       background: #10b981;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+      animation: pulse-green 2s infinite;
+    }
+    .status-dot.offline {
+      background: #ef4444;
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+    }
+
+    @keyframes pulse-green {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+      70% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
 
     .btn-theme {
@@ -426,10 +443,13 @@
       </div>
       <div class="header-actions">
         <div class="time-badge" id="live-clock">--:--:-- WIB</div>
-        <div class="status-badge">
-          <span class="status-dot"></span>
+        
+        <!-- Status Indikator -->
+        <div class="status-badge" id="badge-wrapper">
+          <span class="status-dot" id="dot-status"></span>
           <span id="txt-status">Menghubungkan...</span>
         </div>
+
         <button class="btn-theme" id="btn-theme" title="Ubah Mode Tampilan">🌙</button>
         <button class="btn-logout" id="btn-logout">Logout</button>
       </div>
@@ -439,8 +459,6 @@
     <div>
       <div class="section-label">Parameter Pembangkitan Daya PV</div>
       <div class="grid-solar">
-        
-        <!-- PV 1 -->
         <div class="metric-card c-pv1">
           <div class="metric-header">
             <span class="metric-title">Panel Surya 1</span>
@@ -458,7 +476,6 @@
           </div>
         </div>
 
-        <!-- PV 2 -->
         <div class="metric-card c-pv2">
           <div class="metric-header">
             <span class="metric-title">Panel Surya 2</span>
@@ -476,7 +493,6 @@
           </div>
         </div>
 
-        <!-- PV 3 -->
         <div class="metric-card c-pv3">
           <div class="metric-header">
             <span class="metric-title">Panel Surya 3</span>
@@ -494,7 +510,6 @@
           </div>
         </div>
 
-        <!-- PV 4 -->
         <div class="metric-card c-pv4">
           <div class="metric-header">
             <span class="metric-title">Panel Surya 4</span>
@@ -511,7 +526,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
 
@@ -519,38 +533,14 @@
     <div>
       <div class="section-label">Distribusi Suhu Panel</div>
       <div class="grid-temp">
-        <div class="metric-card c-temp">
-          <div class="metric-header"><span class="metric-title">Titik T1</span></div>
-          <div class="metric-value-box"><span class="metric-value" id="t1">--</span><span class="metric-unit">°C</span></div>
-        </div>
-        <div class="metric-card c-temp">
-          <div class="metric-header"><span class="metric-title">Titik T2</span></div>
-          <div class="metric-value-box"><span class="metric-value" id="t2">--</span><span class="metric-unit">°C</span></div>
-        </div>
-        <div class="metric-card c-temp">
-          <div class="metric-header"><span class="metric-title">Titik T3</span></div>
-          <div class="metric-value-box"><span class="metric-value" id="t3">--</span><span class="metric-unit">°C</span></div>
-        </div>
-        <div class="metric-card c-temp">
-          <div class="metric-header"><span class="metric-title">Titik T4</span></div>
-          <div class="metric-value-box"><span class="metric-value" id="t4">--</span><span class="metric-unit">°C</span></div>
-        </div>
-        <div class="metric-card c-temp">
-          <div class="metric-header"><span class="metric-title">Titik T5</span></div>
-          <div class="metric-value-box"><span class="metric-value" id="t5">--</span><span class="metric-unit">°C</span></div>
-        </div>
-        <div class="metric-card c-temp">
-          <div class="metric-header"><span class="metric-title">Titik T6</span></div>
-          <div class="metric-value-box"><span class="metric-value" id="t6">--</span><span class="metric-unit">°C</span></div>
-        </div>
-        <div class="metric-card c-temp">
-          <div class="metric-header"><span class="metric-title">Titik T7</span></div>
-          <div class="metric-value-box"><span class="metric-value" id="t7">--</span><span class="metric-unit">°C</span></div>
-        </div>
-        <div class="metric-card c-temp">
-          <div class="metric-header"><span class="metric-title">Titik T8</span></div>
-          <div class="metric-value-box"><span class="metric-value" id="t8">--</span><span class="metric-unit">°C</span></div>
-        </div>
+        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T1</span></div><div class="metric-value-box"><span class="metric-value" id="t1">--</span><span class="metric-unit">°C</span></div></div>
+        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T2</span></div><div class="metric-value-box"><span class="metric-value" id="t2">--</span><span class="metric-unit">°C</span></div></div>
+        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T3</span></div><div class="metric-value-box"><span class="metric-value" id="t3">--</span><span class="metric-unit">°C</span></div></div>
+        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T4</span></div><div class="metric-value-box"><span class="metric-value" id="t4">--</span><span class="metric-unit">°C</span></div></div>
+        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T5</span></div><div class="metric-value-box"><span class="metric-value" id="t5">--</span><span class="metric-unit">°C</span></div></div>
+        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T6</span></div><div class="metric-value-box"><span class="metric-value" id="t6">--</span><span class="metric-unit">°C</span></div></div>
+        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T7</span></div><div class="metric-value-box"><span class="metric-value" id="t7">--</span><span class="metric-unit">°C</span></div></div>
+        <div class="metric-card c-temp"><div class="metric-header"><span class="metric-title">Titik T8</span></div><div class="metric-value-box"><span class="metric-value" id="t8">--</span><span class="metric-unit">°C</span></div></div>
       </div>
     </div>
 
@@ -560,32 +550,22 @@
       <div class="grid-weather">
         <div class="metric-card c-dhttemp">
           <div class="metric-header"><span class="metric-title">Suhu Lingkungan</span></div>
-          <div class="metric-value-box">
-            <span class="metric-value" id="dht-suhu">--</span>
-            <span class="metric-unit">°C</span>
-          </div>
+          <div class="metric-value-box"><span class="metric-value" id="dht-suhu">--</span><span class="metric-unit">°C</span></div>
           <div class="metric-sub">DHT22</div>
         </div>
 
         <div class="metric-card c-dhthum">
           <div class="metric-header"><span class="metric-title">Kelembapan Udara</span></div>
-          <div class="metric-value-box">
-            <span class="metric-value" id="dht-hum">--</span>
-            <span class="metric-unit">%</span>
-          </div>
+          <div class="metric-value-box"><span class="metric-value" id="dht-hum">--</span><span class="metric-unit">%</span></div>
           <div class="metric-sub">DHT22 (RH)</div>
         </div>
 
         <div class="metric-card c-wind">
           <div class="metric-header"><span class="metric-title">Kecepatan Angin</span></div>
-          <div class="metric-value-box">
-            <span class="metric-value" id="angin">--</span>
-            <span class="metric-unit">m/s</span>
-          </div>
+          <div class="metric-value-box"><span class="metric-value" id="angin">--</span><span class="metric-unit">m/s</span></div>
           <div class="metric-sub">Anemometer</div>
         </div>
 
-        <!-- Kartu Prakiraan Cuaca Medan Timur (UMSU) -->
         <div class="metric-card c-forecast">
           <div class="metric-header"><span class="metric-title">Prakiraan Medan Timur</span></div>
           <div class="metric-value-box">
@@ -674,7 +654,7 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Integrasi Prakiraan Cuaca (Open-Meteo API: Medan Timur)
+    // Integrasi Prakiraan Cuaca
     async function loadWeatherForecast() {
       const descEl = document.getElementById("weather-desc");
       const detailEl = document.getElementById("weather-detail");
@@ -762,11 +742,60 @@
     const btnCsv = document.getElementById("btn-csv");
     const btnClear = document.getElementById("btn-clear");
     const txtStatus = document.getElementById("txt-status");
+    const dotStatus = document.getElementById("dot-status");
 
-    // Realtime Listener
+    // ==========================================
+    // LOGIKA INDIKATOR STATUS ONLINE / OFFLINE
+    // ==========================================
+    let lastDataReceivedTimestamp = null;
+    let isFirebaseConnected = false;
+    const HEARTBEAT_TIMEOUT_MS = 15000; // Jika dalam 15 detik ESP32 tidak kirim data, set Offline
+
+    function setStatus(isOnline, label) {
+      if (isOnline) {
+        dotStatus.className = "status-dot online";
+        txtStatus.innerText = label || "Online";
+        txtStatus.style.color = "#10b981";
+      } else {
+        dotStatus.className = "status-dot offline";
+        txtStatus.innerText = label || "Offline";
+        txtStatus.style.color = "#ef4444";
+      }
+    }
+
+    // 1. Cek Koneksi Klien Web ke Server Firebase
+    onValue(ref(db, ".info/connected"), (snap) => {
+      isFirebaseConnected = snap.val() === true;
+      if (!isFirebaseConnected) {
+        setStatus(false, "Server Terputus");
+      }
+    });
+
+    // 2. Watchdog Heartbeat: Cek apakah ESP32 aktif mengirimkan data
+    setInterval(() => {
+      if (!isFirebaseConnected) return;
+
+      if (!lastDataReceivedTimestamp) {
+        setStatus(false, "Menunggu Data...");
+        return;
+      }
+
+      const diff = Date.now() - lastDataReceivedTimestamp;
+      if (diff > HEARTBEAT_TIMEOUT_MS) {
+        setStatus(false, "Alat Offline");
+      } else {
+        setStatus(true, "Online");
+      }
+    }, 2000);
+
+    // Realtime Data Listener
     onValue(ref(db, "monitoring/realtime"), (snap) => {
       const val = snap.val();
       if (val) {
+        // Tandai timestamp data terakhir masuk
+        lastDataReceivedTimestamp = Date.now();
+        setStatus(true, "Online");
+
         // 4x INA219 (V & I)
         for (let i = 1; i <= 4; i++) {
           const vEl = document.getElementById(`v${i}`);
@@ -785,8 +814,6 @@
         dhtTempEl.innerText = val.suhu_lingkungan !== undefined ? Number(val.suhu_lingkungan).toFixed(1) : "--";
         dhtHumEl.innerText  = val.kelembapan !== undefined ? Number(val.kelembapan).toFixed(1) : "--";
         windEl.innerText    = val.angin !== undefined ? Number(val.angin).toFixed(2) : "--";
-        
-        txtStatus.innerText = "Sinkron";
       }
     });
 
