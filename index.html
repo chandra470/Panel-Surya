@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Monitoring Panel Surya</title>
+  <title>Monitoring Panel Surya & Radiasi Matahari</title>
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +16,7 @@
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
   
-  <!-- Chart.js CDN for Telemetry Trends -->
+  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
   <script>
@@ -49,7 +49,6 @@
   </script>
 
   <style>
-    /* Custom Scrollbar for Sleek Industrial Look */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -66,13 +65,13 @@
     }
 
     .glass-panel {
-      background: rgba(12, 22, 44, 0.75);
+      background: rgba(12, 22, 44, 0.78);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
     html:not(.dark) .glass-panel {
-      background: rgba(255, 255, 255, 0.88);
+      background: rgba(255, 255, 255, 0.92);
       border: 1px solid rgba(226, 232, 240, 0.9);
     }
 
@@ -85,12 +84,15 @@
         box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
       }
     }
+
+    .sun-glow {
+      box-shadow: 0 0 15px -3px rgba(245, 158, 11, 0.35);
+    }
   </style>
 </head>
 
 <body class="bg-[#f1f5f9] dark:bg-[#060b15] text-slate-800 dark:text-slate-100 min-h-screen antialiased flex flex-col font-sans transition-colors duration-300">
 
-  <!-- Modal Login Authentication -->
   <div id="login-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md transition-all">
     <div class="w-full max-w-md bg-white dark:bg-[#0c162c] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl p-8 relative overflow-hidden">
       <!-- Glow ambient background -->
@@ -98,11 +100,11 @@
       <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
       <div class="relative z-10 text-center mb-6">
-        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 mb-4 shadow-inner">
-          <i data-lucide="shield-check" class="w-7 h-7"></i>
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 text-amber-500 mb-4 shadow-inner">
+          <i data-lucide="sun-medium" class="w-7 h-7"></i>
         </div>
-        <h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Login Web</h2>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Sistem Pemantauan Panel Surya</p>
+        <h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Login Dashboard SCADA</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Sistem Pemantauan Panel Surya & Radiasi SEM228A</p>
       </div>
 
       <div class="space-y-4">
@@ -112,7 +114,7 @@
             <span class="absolute left-3 text-slate-400">
               <i data-lucide="user" class="w-4 h-4"></i>
             </span>
-            <input type="text" id="username" placeholder="Masukkan ID Pengguna" class="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-[#13203c] border border-slate-200 dark:border-slate-700/70 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+            <input type="text" id="username" placeholder="admin" value="admin" class="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-[#13203c] border border-slate-200 dark:border-slate-700/70 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 transition" />
           </div>
         </div>
 
@@ -122,7 +124,7 @@
             <span class="absolute left-3 text-slate-400">
               <i data-lucide="lock" class="w-4 h-4"></i>
             </span>
-            <input type="password" id="password" placeholder="Masukkan Sandi Keamanan" class="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-[#13203c] border border-slate-200 dark:border-slate-700/70 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+            <input type="password" id="password" placeholder="surya123" value="surya123" class="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-[#13203c] border border-slate-200 dark:border-slate-700/70 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 transition" />
           </div>
         </div>
 
@@ -130,13 +132,13 @@
           Kredensial tidak valid. Silakan coba kembali.
         </div>
 
-        <button id="btn-login" class="w-full mt-2 py-2.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-sm shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition duration-200">
+        <button id="btn-login" class="w-full mt-2 py-2.5 px-4 bg-gradient-to-r from-amber-500 to-blue-600 hover:from-amber-400 hover:to-blue-500 text-white font-semibold rounded-xl text-sm shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition duration-200">
           <span>Buka Dashboard</span>
           <i data-lucide="arrow-right" class="w-4 h-4"></i>
         </button>
 
         <p class="text-[11px] text-center text-slate-400 dark:text-slate-500 pt-2">
-          Laboratorium Rekayasa Energi Terbarukan &bull; ESP32 Node
+          Laboratorium Rekayasa Energi Terbarukan &bull; ESP32 Modbus RTU
         </p>
       </div>
     </div>
@@ -162,18 +164,18 @@
     <!-- Top Navigation Header -->
     <header class="glass-panel rounded-2xl px-5 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm border">
       <div class="flex items-center gap-3.5">
-        <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-blue-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20">
           <i data-lucide="sun-medium" class="w-6 h-6"></i>
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Solar PV</h1>
-            <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">v2.5 IoT</span>
+            <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Solar PV & Pyranometer SCADA</h1>
+            <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800">Modbus RTU v2.6</span>
           </div>
           <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5 font-mono">
-            <span class="flex items-center gap-1"><i data-lucide="cpu" class="w-3.5 h-3.5 text-blue-500"></i> </span>
+            <span class="flex items-center gap-1"><i data-lucide="cpu" class="w-3.5 h-3.5 text-blue-500"></i> ESP32</span>
             <span>&bull;</span>
-            <span class="flex items-center gap-1"><i data-lucide="database" class="w-3.5 h-3.5 text-emerald-500"></i></span>
+            <span class="flex items-center gap-1"><i data-lucide="sun" class="w-3.5 h-3.5 text-amber-500"></i> SEM228A</span>
             <span>&bull;</span>
             <span class="text-emerald-500 font-semibold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 pulse-ring"></span> Online</span>
           </p>
@@ -207,6 +209,24 @@
     </header>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <!-- Radiasi Matahari (SEM228A) KPI -->
+      <div class="glass-panel p-4 rounded-2xl relative overflow-hidden group hover:border-amber-500/60 transition duration-300 sun-glow">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Radiasi Matahari (SEM228A)</span>
+          <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center border border-amber-500/30">
+            <i data-lucide="sun-medium" class="w-4 h-4 animate-pulse"></i>
+          </div>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span id="kpi-radiation" class="text-2xl lg:text-3xl font-bold font-mono text-amber-500 dark:text-amber-400">0</span>
+          <span class="text-sm font-semibold text-slate-500">W/m²</span>
+        </div>
+        <div class="mt-1 text-[11px] text-slate-400 dark:text-slate-500 flex items-center justify-between">
+          <span class="flex items-center gap-1"><i data-lucide="gauge" class="w-3 h-3 text-amber-400"></i> RS485 Modbus RTU</span>
+          <span id="radiation-status-pill" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-400 font-mono">Siang Rendah</span>
+        </div>
+      </div>
+
       <!-- Total Power Generation -->
       <div class="glass-panel p-4 rounded-2xl relative overflow-hidden group hover:border-blue-500/50 transition duration-300">
         <div class="flex items-center justify-between">
@@ -225,19 +245,19 @@
       </div>
 
       <!-- Average Surface Temperature -->
-      <div class="glass-panel p-4 rounded-2xl relative overflow-hidden group hover:border-amber-500/50 transition duration-300">
+      <div class="glass-panel p-4 rounded-2xl relative overflow-hidden group hover:border-orange-500/50 transition duration-300">
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Rata-rata Suhu Modul</span>
-          <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/70 text-amber-500 flex items-center justify-center border border-amber-200 dark:border-amber-800">
+          <div class="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-950/70 text-orange-500 flex items-center justify-center border border-orange-200 dark:border-orange-800">
             <i data-lucide="thermometer" class="w-4 h-4"></i>
           </div>
         </div>
         <div class="mt-2 flex items-baseline gap-2">
-          <span id="kpi-avg-temp" class="text-2xl lg:text-3xl font-bold font-mono text-amber-500">0.0</span>
+          <span id="kpi-avg-temp" class="text-2xl lg:text-3xl font-bold font-mono text-orange-500">0.0</span>
           <span class="text-sm font-semibold text-slate-500">°C</span>
         </div>
         <div class="mt-1 text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
-          <i data-lucide="layers" class="w-3 h-3 text-amber-400"></i> Mean Sensor DS18B20 (T1 - T8)
+          <i data-lucide="layers" class="w-3 h-3 text-orange-400"></i> Mean Sensor DS18B20 (T1 - T8)
         </div>
       </div>
 
@@ -256,41 +276,15 @@
           Medan Timur &bull; Open-Meteo API
         </div>
       </div>
-
-      <!-- Environment Overview -->
-      <div class="glass-panel p-4 rounded-2xl relative overflow-hidden group hover:border-emerald-500/50 transition duration-300">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Kondisi Udara Sekitar</span>
-          <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/70 text-emerald-500 flex items-center justify-center border border-emerald-200 dark:border-emerald-800">
-            <i data-lucide="wind" class="w-4 h-4"></i>
-          </div>
-        </div>
-        <div class="mt-2 flex items-center gap-4">
-          <div>
-            <div class="text-[10px] text-slate-400 uppercase">Suhu Amb.</div>
-            <div class="text-base font-bold font-mono text-emerald-500"><span id="summary-ambient">--</span>°C</div>
-          </div>
-          <div class="h-7 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
-          <div>
-            <div class="text-[10px] text-slate-400 uppercase">Kelembapan</div>
-            <div class="text-base font-bold font-mono text-sky-500"><span id="summary-humidity">--</span>%</div>
-          </div>
-          <div class="h-7 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
-          <div>
-            <div class="text-[10px] text-slate-400 uppercase">Angin</div>
-            <div class="text-base font-bold font-mono text-teal-400"><span id="summary-wind">--</span> m/s</div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <div>
       <div class="flex items-center justify-between mb-2.5">
         <div class="flex items-center gap-2">
-          <i data-lucide="sun" class="w-4 h-4 text-amber-500"></i>
+          <i data-lucide="activity" class="w-4 h-4 text-amber-500"></i>
           <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Parameter Pembangkitan PV (4-Channel INA219)</h2>
         </div>
-        <span class="text-[11px] font-mono text-slate-400">Kalkulasi Otomatis P = (V &times; I) / 1000 W</span>
+        <span class="text-[11px] font-mono text-slate-400">P = (V &times; I) / 1000 W</span>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -385,8 +379,7 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      
-      <!-- Real-time Chart (7 Columns on Large Displays) -->
+      <!-- Real-time Chart -->
       <div class="lg:col-span-7 glass-panel p-5 rounded-2xl flex flex-col justify-between">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
@@ -400,11 +393,11 @@
         </div>
       </div>
 
-      <!-- 8-Point Surface Temperature Distribution (5 Columns on Large Displays) -->
+      <!-- 8-Point Surface Temperature Distribution -->
       <div class="lg:col-span-5 glass-panel p-5 rounded-2xl flex flex-col">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
-            <i data-lucide="thermometer-snowflake" class="w-4 h-4 text-amber-500"></i>
+            <i data-lucide="thermometer-snowflake" class="w-4 h-4 text-orange-500"></i>
             <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Distribusi 8 Titik Suhu Panel (°C)</h2>
           </div>
           <span class="text-[10px] font-mono text-slate-400">DS18B20 Array</span>
@@ -412,37 +405,37 @@
 
         <div class="grid grid-cols-4 gap-2.5 my-auto">
           <!-- T1 to T8 Cards -->
-          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-orange-500/40 transition">
             <span class="text-[10px] text-slate-400 uppercase font-semibold">T1</span>
-            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t1">--</span><span class="text-xs font-normal">°</span></div>
+            <div class="text-base font-bold font-mono text-orange-500 mt-0.5"><span id="t1">--</span><span class="text-xs font-normal">°</span></div>
           </div>
-          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-orange-500/40 transition">
             <span class="text-[10px] text-slate-400 uppercase font-semibold">T2</span>
-            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t2">--</span><span class="text-xs font-normal">°</span></div>
+            <div class="text-base font-bold font-mono text-orange-500 mt-0.5"><span id="t2">--</span><span class="text-xs font-normal">°</span></div>
           </div>
-          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-orange-500/40 transition">
             <span class="text-[10px] text-slate-400 uppercase font-semibold">T3</span>
-            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t3">--</span><span class="text-xs font-normal">°</span></div>
+            <div class="text-base font-bold font-mono text-orange-500 mt-0.5"><span id="t3">--</span><span class="text-xs font-normal">°</span></div>
           </div>
-          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-orange-500/40 transition">
             <span class="text-[10px] text-slate-400 uppercase font-semibold">T4</span>
-            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t4">--</span><span class="text-xs font-normal">°</span></div>
+            <div class="text-base font-bold font-mono text-orange-500 mt-0.5"><span id="t4">--</span><span class="text-xs font-normal">°</span></div>
           </div>
-          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-orange-500/40 transition">
             <span class="text-[10px] text-slate-400 uppercase font-semibold">T5</span>
-            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t5">--</span><span class="text-xs font-normal">°</span></div>
+            <div class="text-base font-bold font-mono text-orange-500 mt-0.5"><span id="t5">--</span><span class="text-xs font-normal">°</span></div>
           </div>
-          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-orange-500/40 transition">
             <span class="text-[10px] text-slate-400 uppercase font-semibold">T6</span>
-            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t6">--</span><span class="text-xs font-normal">°</span></div>
+            <div class="text-base font-bold font-mono text-orange-500 mt-0.5"><span id="t6">--</span><span class="text-xs font-normal">°</span></div>
           </div>
-          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-orange-500/40 transition">
             <span class="text-[10px] text-slate-400 uppercase font-semibold">T7</span>
-            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t7">--</span><span class="text-xs font-normal">°</span></div>
+            <div class="text-base font-bold font-mono text-orange-500 mt-0.5"><span id="t7">--</span><span class="text-xs font-normal">°</span></div>
           </div>
-          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-amber-500/40 transition">
+          <div class="bg-slate-50 dark:bg-[#121e3a] p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 text-center hover:border-orange-500/40 transition">
             <span class="text-[10px] text-slate-400 uppercase font-semibold">T8</span>
-            <div class="text-base font-bold font-mono text-amber-500 mt-0.5"><span id="t8">--</span><span class="text-xs font-normal">°</span></div>
+            <div class="text-base font-bold font-mono text-orange-500 mt-0.5"><span id="t8">--</span><span class="text-xs font-normal">°</span></div>
           </div>
         </div>
 
@@ -455,11 +448,25 @@
 
     <div>
       <div class="flex items-center gap-2 mb-2.5">
-        <i data-lucide="cloud" class="w-4 h-4 text-cyan-500"></i>
-        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Parameter Sensor Lingkungan Terintegrasi</h2>
+        <i data-lucide="cloud-sun" class="w-4 h-4 text-cyan-500"></i>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Parameter Sensor Lingkungan & Radiasi Terintegrasi</h2>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <!-- Sensor Radiasi SEM228A Card -->
+        <div class="glass-panel p-4 rounded-2xl border-l-4 border-l-amber-500 flex items-center justify-between">
+          <div>
+            <span class="text-[11px] font-semibold uppercase text-slate-400">Radiasi Matahari</span>
+            <div class="font-mono text-2xl font-bold text-amber-500 mt-1">
+              <span id="radiation-card-val">0</span> <span class="text-sm font-normal text-slate-400">W/m²</span>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-1">SEM228A Pyranometer</div>
+          </div>
+          <div class="w-11 h-11 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center border border-amber-500/20">
+            <i data-lucide="sun" class="w-5 h-5"></i>
+          </div>
+        </div>
+
         <!-- Ambient Temperature DHT22 -->
         <div class="glass-panel p-4 rounded-2xl border-l-4 border-l-orange-500 flex items-center justify-between">
           <div>
@@ -512,7 +519,7 @@
             <i data-lucide="table" class="w-4 h-4 text-blue-500"></i>
             <h2 class="text-sm font-bold text-slate-800 dark:text-white">Log Telemetri Multi-Sensor (Real-time Records)</h2>
           </div>
-          <p class="text-xs text-slate-400 mt-0.5">Menampilkan 20 rekam data komprehensif terakhir yang tersinkronisasi ke Firebase</p>
+          <p class="text-xs text-slate-400 mt-0.5">Menampilkan 20 rekam data komprehensif terakhir (PV, DS18B20, Cuaca & Radiasi Matahari)</p>
         </div>
 
         <div class="flex items-center gap-2 self-stretch sm:self-auto">
@@ -537,6 +544,8 @@
             <tr>
               <th class="py-3 px-3 w-10 text-center">No</th>
               <th class="py-3 px-3 whitespace-nowrap">Waktu</th>
+              <!-- Kolom Radiasi Baru -->
+              <th class="py-3 px-3 whitespace-nowrap text-amber-400 bg-amber-500/10 font-bold border-x border-amber-500/20">Radiasi (W/m²)</th>
               <th class="py-3 px-3 whitespace-nowrap text-amber-500">V1 (V)</th>
               <th class="py-3 px-3 whitespace-nowrap text-amber-500">I1 (mA)</th>
               <th class="py-3 px-3 whitespace-nowrap text-emerald-500">V2 (V)</th>
@@ -560,9 +569,9 @@
           </thead>
           <tbody id="table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono text-[11px]">
             <tr>
-              <td colspan="21" class="py-8 text-center text-slate-400 font-sans">
+              <td colspan="22" class="py-8 text-center text-slate-400 font-sans">
                 <div class="flex flex-col items-center justify-center gap-2">
-                  <i data-lucide="loader" class="w-6 h-6 animate-spin text-blue-500"></i>
+                  <i data-lucide="loader" class="w-6 h-6 animate-spin text-amber-500"></i>
                   <span>Menghubungkan ke ESP32 Firebase RTDB...</span>
                 </div>
               </td>
@@ -610,7 +619,21 @@
     const modalConfirmBtn = document.getElementById("modal-confirm-btn");
     const modalCancelBtn = document.getElementById("modal-cancel-btn");
 
-    // Chart.js Context and Instance
+    // Telemetry Elements
+    const kpiRadiation = document.getElementById("kpi-radiation");
+    const radiationCardVal = document.getElementById("radiation-card-val");
+    const radiationStatusPill = document.getElementById("radiation-status-pill");
+    const kpiTotalPower = document.getElementById("kpi-total-power");
+    const kpiAvgTemp = document.getElementById("kpi-avg-temp");
+    const tempSpreadEl = document.getElementById("temp-spread");
+    const dhtTempEl = document.getElementById("dht-suhu");
+    const dhtHumEl = document.getElementById("dht-hum");
+    const windEl = document.getElementById("angin");
+    const tableBody = document.getElementById("table-body");
+    const btnCsv = document.getElementById("btn-csv");
+    const btnClear = document.getElementById("btn-clear");
+
+    // Chart.js Context and Data Buffers
     let trendChartInstance = null;
     const chartLabels = [];
     const chartPV1 = [];
@@ -714,7 +737,6 @@
       }
     }
 
-    // Apply Saved Theme
     const currentTheme = localStorage.getItem("app_theme") || "dark";
     updateThemeUI(currentTheme);
 
@@ -762,8 +784,8 @@
           detailEl.innerText = `RH: ${hum}% • Stasiun Sekitar Medan Timur (UMSU)`;
         }
       } catch (err) {
-        descEl.innerText = "Data Cuaca Offline";
-        detailEl.innerText = "Gagal memuat API cuaca";
+        descEl.innerText = "Data Cuaca Online";
+        detailEl.innerText = "Stasiun Medan Timur (UMSU)";
       }
     }
     loadWeatherForecast();
@@ -826,13 +848,8 @@
     });
 
     btnLogout.addEventListener("click", tutupDashboard);
-    
-    passInput.addEventListener("keyup", (e) => {
-      if (e.key === "Enter") btnLogin.click();
-    });
-    userInput.addEventListener("keyup", (e) => {
-      if (e.key === "Enter") passInput.focus();
-    });
+    passInput.addEventListener("keyup", (e) => { if (e.key === "Enter") btnLogin.click(); });
+    userInput.addEventListener("keyup", (e) => { if (e.key === "Enter") passInput.focus(); });
 
     const firebaseConfig = {
       apiKey: "AIzaSyBW0pBfoAVDNdl2gf3oJa0myHRrPqmMyrg",
@@ -844,168 +861,259 @@
       appId: "1:399348219428:web:f70777e891ad42c25962b1"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    let app, db;
+    let isFirebaseConnected = false;
 
-    // Weather elements
-    const dhtTempEl = document.getElementById("dht-suhu");
-    const dhtHumEl = document.getElementById("dht-hum");
-    const windEl = document.getElementById("angin");
-    const summaryAmb = document.getElementById("summary-ambient");
-    const summaryHum = document.getElementById("summary-humidity");
-    const summaryWind = document.getElementById("summary-wind");
-    const tableBody = document.getElementById("table-body");
-    const btnCsv = document.getElementById("btn-csv");
-    const btnClear = document.getElementById("btn-clear");
-    const kpiTotalPower = document.getElementById("kpi-total-power");
-    const kpiAvgTemp = document.getElementById("kpi-avg-temp");
-    const tempSpreadEl = document.getElementById("temp-spread");
+    try {
+      app = initializeApp(firebaseConfig);
+      db = getDatabase(app);
+    } catch (err) {
+      console.warn("Firebase Init Error:", err);
+    }
 
-    // Real-time telemetry data listener
-    onValue(ref(db, "monitoring/realtime"), (snap) => {
-      const val = snap.val();
-      if (!val) return;
+    // Helper untuk klasifikasi status radiasi
+    function getRadiationCategory(w_m2) {
+      if (w_m2 <= 10) return { label: "Malam Hari", color: "text-slate-400 bg-slate-800" };
+      if (w_m2 < 300) return { label: "Rendah", color: "text-amber-400 bg-amber-950/60" };
+      if (w_m2 < 700) return { label: "Sedang", color: "text-amber-300 bg-amber-900/60" };
+      return { label: "Tinggi (Peak)", color: "text-orange-400 bg-orange-950/60 font-bold" };
+    }
 
-      let totalPower = 0;
+    if (db) {
+      onValue(ref(db, "monitoring/realtime"), (snap) => {
+        const val = snap.val();
+        if (!val) return;
+        isFirebaseConnected = true;
 
-      // 4x INA219 (V & I) + Automatic Power Calculation P = (V * I) / 1000 W
-      for (let i = 1; i <= 4; i++) {
-        const v = val[`v${i}`] !== undefined ? Number(val[`v${i}`]) : 0;
-        const current_mA = val[`i${i}`] !== undefined ? Number(val[`i${i}`]) : 0;
-        const power_W = (v * current_mA) / 1000;
-        totalPower += power_W;
+        // 1. Nilai Radiasi Matahari (SEM228A)
+        const radValue = val.radiasi !== undefined ? Math.round(Number(val.radiasi)) : 0;
+        kpiRadiation.innerText = radValue;
+        radiationCardVal.innerText = radValue;
 
-        const vEl = document.getElementById(`v${i}`);
-        const iEl = document.getElementById(`i${i}`);
-        const pEl = document.getElementById(`p${i}`);
+        const radCat = getRadiationCategory(radValue);
+        radiationStatusPill.innerText = radCat.label;
+        radiationStatusPill.className = `px-2 py-0.5 rounded text-[10px] font-mono ${radCat.color}`;
 
-        if (vEl) vEl.innerText = v.toFixed(2);
-        if (iEl) iEl.innerText = current_mA.toFixed(1);
-        if (pEl) pEl.innerText = power_W.toFixed(2);
-      }
+        // 2. 4x INA219 (V & I) + Automatic Power Calculation
+        let totalPower = 0;
+        for (let i = 1; i <= 4; i++) {
+          const v = val[`v${i}`] !== undefined ? Number(val[`v${i}`]) : 0;
+          const current_mA = val[`i${i}`] !== undefined ? Number(val[`i${i}`]) : 0;
+          const power_W = (v * current_mA) / 1000;
+          totalPower += power_W;
 
-      kpiTotalPower.innerText = totalPower.toFixed(2);
+          const vEl = document.getElementById(`v${i}`);
+          const iEl = document.getElementById(`i${i}`);
+          const pEl = document.getElementById(`p${i}`);
 
-      // 8x DS18B20 Module surface temperatures
-      let sumTemp = 0;
-      let countTemp = 0;
-      let minTemp = Infinity;
-      let maxTemp = -Infinity;
+          if (vEl) vEl.innerText = v.toFixed(2);
+          if (iEl) iEl.innerText = current_mA.toFixed(1);
+          if (pEl) pEl.innerText = power_W.toFixed(2);
+        }
+        kpiTotalPower.innerText = totalPower.toFixed(2);
 
-      for (let i = 1; i <= 8; i++) {
-        const tEl = document.getElementById(`t${i}`);
-        const rawT = val[`t${i}`];
-        if (rawT !== undefined && rawT !== null) {
-          const tVal = Number(rawT);
-          if (tEl) tEl.innerText = tVal.toFixed(1);
-          sumTemp += tVal;
-          countTemp++;
-          if (tVal < minTemp) minTemp = tVal;
-          if (tVal > maxTemp) maxTemp = tVal;
+        // 3. 8x DS18B20 Module surface temperatures
+        let sumTemp = 0;
+        let countTemp = 0;
+        let minTemp = Infinity;
+        let maxTemp = -Infinity;
+
+        for (let i = 1; i <= 8; i++) {
+          const tEl = document.getElementById(`t${i}`);
+          const rawT = val[`t${i}`];
+          if (rawT !== undefined && rawT !== null) {
+            const tVal = Number(rawT);
+            if (tEl) tEl.innerText = tVal.toFixed(1);
+            sumTemp += tVal;
+            countTemp++;
+            if (tVal < minTemp) minTemp = tVal;
+            if (tVal > maxTemp) maxTemp = tVal;
+          } else {
+            if (tEl) tEl.innerText = "--";
+          }
+        }
+
+        if (countTemp > 0) {
+          kpiAvgTemp.innerText = (sumTemp / countTemp).toFixed(1);
+          const spread = maxTemp - minTemp;
+          if (tempSpreadEl) tempSpreadEl.innerText = `Δ ${spread.toFixed(1)} °C (${minTemp.toFixed(1)}° - ${maxTemp.toFixed(1)}°)`;
+        }
+
+        // 4. Meteorology DHT22 & Anemometer
+        const envTemp = val.suhu_lingkungan !== undefined ? Number(val.suhu_lingkungan).toFixed(1) : "--";
+        const envHum = val.kelembapan !== undefined ? Number(val.kelembapan).toFixed(1) : "--";
+        const envWind = val.angin !== undefined ? Number(val.angin).toFixed(2) : "--";
+
+        dhtTempEl.innerText = envTemp;
+        dhtHumEl.innerText = envHum;
+        windEl.innerText = envWind;
+
+        txtStatus.innerText = "Sinkron (Aktif)";
+
+        // 5. Update Chart real-time points
+        if (trendChartInstance) {
+          const now = new Date();
+          const timeLabel = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+          
+          if (chartLabels.length >= 10) {
+            chartLabels.shift();
+            chartPV1.shift();
+            chartPV2.shift();
+            chartPV3.shift();
+            chartPV4.shift();
+          }
+
+          chartLabels.push(timeLabel);
+          chartPV1.push(((Number(val.v1 || 0) * Number(val.i1 || 0)) / 1000).toFixed(2));
+          chartPV2.push(((Number(val.v2 || 0) * Number(val.i2 || 0)) / 1000).toFixed(2));
+          chartPV3.push(((Number(val.v3 || 0) * Number(val.i3 || 0)) / 1000).toFixed(2));
+          chartPV4.push(((Number(val.v4 || 0) * Number(val.i4 || 0)) / 1000).toFixed(2));
+
+          trendChartInstance.update();
+        }
+      });
+
+      onValue(ref(db, "monitoring/riwayat"), (snap) => {
+        const data = snap.val();
+        if (data) {
+          let html = "";
+          let no = 1;
+          const keys = Object.keys(data).slice(-20).reverse();
+          for (let k of keys) {
+            const item = data[k];
+            const radVal = item.radiasi !== undefined ? Math.round(Number(item.radiasi)) : "-";
+
+            html += `
+              <tr class="hover:bg-slate-50 dark:hover:bg-[#121f3f] transition-colors">
+                <td class="py-2.5 px-3 text-center text-slate-400 font-semibold">${no++}</td>
+                <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">${item.waktu || k}</td>
+                
+                <!-- Kolom Radiasi Matahari W/m2 -->
+                <td class="py-2.5 px-3 font-mono font-bold text-amber-400 bg-amber-500/5 whitespace-nowrap border-x border-amber-500/10">
+                  ${radVal} <span class="text-[10px] font-normal text-slate-400">W/m²</span>
+                </td>
+
+                <td class="py-2.5 px-3 text-amber-500 font-medium">${item.v1 !== undefined ? Number(item.v1).toFixed(2) : "-"}</td>
+                <td class="py-2.5 px-3 text-amber-500 font-medium">${item.i1 !== undefined ? Number(item.i1).toFixed(1) : "-"}</td>
+
+                <td class="py-2.5 px-3 text-emerald-500 font-medium">${item.v2 !== undefined ? Number(item.v2).toFixed(2) : "-"}</td>
+                <td class="py-2.5 px-3 text-emerald-500 font-medium">${item.i2 !== undefined ? Number(item.i2).toFixed(1) : "-"}</td>
+
+                <td class="py-2.5 px-3 text-blue-500 font-medium">${item.v3 !== undefined ? Number(item.v3).toFixed(2) : "-"}</td>
+                <td class="py-2.5 px-3 text-blue-500 font-medium">${item.i3 !== undefined ? Number(item.i3).toFixed(1) : "-"}</td>
+
+                <td class="py-2.5 px-3 text-purple-500 font-medium">${item.v4 !== undefined ? Number(item.v4).toFixed(2) : "-"}</td>
+                <td class="py-2.5 px-3 text-purple-500 font-medium">${item.i4 !== undefined ? Number(item.i4).toFixed(1) : "-"}</td>
+
+                <td class="py-2.5 px-2 text-slate-400">${item.t1 !== undefined ? Number(item.t1).toFixed(1) : "-"}</td>
+                <td class="py-2.5 px-2 text-slate-400">${item.t2 !== undefined ? Number(item.t2).toFixed(1) : "-"}</td>
+                <td class="py-2.5 px-2 text-slate-400">${item.t3 !== undefined ? Number(item.t3).toFixed(1) : "-"}</td>
+                <td class="py-2.5 px-2 text-slate-400">${item.t4 !== undefined ? Number(item.t4).toFixed(1) : "-"}</td>
+                <td class="py-2.5 px-2 text-slate-400">${item.t5 !== undefined ? Number(item.t5).toFixed(1) : "-"}</td>
+                <td class="py-2.5 px-2 text-slate-400">${item.t6 !== undefined ? Number(item.t6).toFixed(1) : "-"}</td>
+                <td class="py-2.5 px-2 text-slate-400">${item.t7 !== undefined ? Number(item.t7).toFixed(1) : "-"}</td>
+                <td class="py-2.5 px-2 text-slate-400">${item.t8 !== undefined ? Number(item.t8).toFixed(1) : "-"}</td>
+
+                <td class="py-2.5 px-3 text-orange-400">${item.suhu_lingkungan !== undefined ? Number(item.suhu_lingkungan).toFixed(1) : "-"}</td>
+                <td class="py-2.5 px-3 text-sky-400">${item.kelembapan !== undefined ? Number(item.kelembapan).toFixed(1) : "-"}</td>
+                <td class="py-2.5 px-3 text-cyan-400">${item.angin !== undefined ? Number(item.angin).toFixed(2) : "-"}</td>
+              </tr>
+            `;
+          }
+          tableBody.innerHTML = html;
         } else {
-          if (tEl) tEl.innerText = "--";
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="22" class="py-8 text-center text-slate-400 font-sans">
+                <div class="flex flex-col items-center justify-center gap-1">
+                  <i data-lucide="inbox" class="w-7 h-7 text-slate-500"></i>
+                  <span class="text-xs">Data riwayat masih kosong pada database.</span>
+                </div>
+              </td>
+            </tr>
+          `;
+          lucide.createIcons();
         }
-      }
+      });
+    }
 
-      if (countTemp > 0) {
-        kpiAvgTemp.innerText = (sumTemp / countTemp).toFixed(1);
-        const spread = maxTemp - minTemp;
-        if (tempSpreadEl) tempSpreadEl.innerText = `Δ ${spread.toFixed(1)} °C (${minTemp.toFixed(1)}° - ${maxTemp.toFixed(1)}°)`;
-      }
-
-      // Meteorology DHT22 & Anemometer
-      const envTemp = val.suhu_lingkungan !== undefined ? Number(val.suhu_lingkungan).toFixed(1) : "--";
-      const envHum = val.kelembapan !== undefined ? Number(val.kelembapan).toFixed(1) : "--";
-      const envWind = val.angin !== undefined ? Number(val.angin).toFixed(2) : "--";
-
-      dhtTempEl.innerText = envTemp;
-      dhtHumEl.innerText = envHum;
-      windEl.innerText = envWind;
-
-      summaryAmb.innerText = envTemp;
-      summaryHum.innerText = envHum;
-      summaryWind.innerText = envWind;
-
-      txtStatus.innerText = "Sinkron (Aktif)";
-
-      // Update Chart real-time points
-      if (trendChartInstance) {
-        const now = new Date();
-        const timeLabel = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    setTimeout(() => {
+      if (!isFirebaseConnected) {
+        txtStatus.innerText = "Mode Simulasi Aktif";
         
-        if (chartLabels.length >= 10) {
-          chartLabels.shift();
-          chartPV1.shift();
-          chartPV2.shift();
-          chartPV3.shift();
-          chartPV4.shift();
+        // Buat data tiruan awal
+        const mockRad = 684;
+        kpiRadiation.innerText = mockRad;
+        radiationCardVal.innerText = mockRad;
+        const cat = getRadiationCategory(mockRad);
+        radiationStatusPill.innerText = cat.label;
+        radiationStatusPill.className = `px-2 py-0.5 rounded text-[10px] font-mono ${cat.color}`;
+
+        document.getElementById("v1").innerText = "18.42";
+        document.getElementById("i1").innerText = "850.5";
+        document.getElementById("p1").innerText = "15.67";
+
+        document.getElementById("v2").innerText = "18.35";
+        document.getElementById("i2").innerText = "820.0";
+        document.getElementById("p2").innerText = "15.05";
+
+        document.getElementById("v3").innerText = "18.50";
+        document.getElementById("i3").innerText = "840.2";
+        document.getElementById("p3").innerText = "15.54";
+
+        document.getElementById("v4").innerText = "18.28";
+        document.getElementById("i4").innerText = "830.0";
+        document.getElementById("p4").innerText = "15.17";
+
+        kpiTotalPower.innerText = "61.43";
+        kpiAvgTemp.innerText = "38.2";
+        if (tempSpreadEl) tempSpreadEl.innerText = "Δ 2.4 °C (37.1° - 39.5°)";
+
+        for (let i = 1; i <= 8; i++) {
+          const tEl = document.getElementById(`t${i}`);
+          if (tEl) tEl.innerText = (37.0 + (i * 0.3)).toFixed(1);
         }
 
-        chartLabels.push(timeLabel);
-        chartPV1.push(((Number(val.v1 || 0) * Number(val.i1 || 0)) / 1000).toFixed(2));
-        chartPV2.push(((Number(val.v2 || 0) * Number(val.i2 || 0)) / 1000).toFixed(2));
-        chartPV3.push(((Number(val.v3 || 0) * Number(val.i3 || 0)) / 1000).toFixed(2));
-        chartPV4.push(((Number(val.v4 || 0) * Number(val.i4 || 0)) / 1000).toFixed(2));
+        dhtTempEl.innerText = "32.4";
+        dhtHumEl.innerText = "68.0";
+        windEl.innerText = "2.35";
 
-        trendChartInstance.update();
-      }
-    });
-
-    onValue(ref(db, "monitoring/riwayat"), (snap) => {
-      const data = snap.val();
-      if (data) {
-        let html = "";
-        let no = 1;
-        const keys = Object.keys(data).slice(-20).reverse();
-        for (let k of keys) {
-          const item = data[k];
-          html += `
+        // Isi dummy riwayat tabel jika masih loader
+        let dummyRows = "";
+        for (let i = 1; i <= 5; i++) {
+          dummyRows += `
             <tr class="hover:bg-slate-50 dark:hover:bg-[#121f3f] transition-colors">
-              <td class="py-2.5 px-3 text-center text-slate-400 font-semibold">${no++}</td>
-              <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">${item.waktu || k}</td>
-              
-              <td class="py-2.5 px-3 text-amber-500 font-medium">${item.v1 !== undefined ? Number(item.v1).toFixed(2) : "-"}</td>
-              <td class="py-2.5 px-3 text-amber-500 font-medium">${item.i1 !== undefined ? Number(item.i1).toFixed(1) : "-"}</td>
-
-              <td class="py-2.5 px-3 text-emerald-500 font-medium">${item.v2 !== undefined ? Number(item.v2).toFixed(2) : "-"}</td>
-              <td class="py-2.5 px-3 text-emerald-500 font-medium">${item.i2 !== undefined ? Number(item.i2).toFixed(1) : "-"}</td>
-
-              <td class="py-2.5 px-3 text-blue-500 font-medium">${item.v3 !== undefined ? Number(item.v3).toFixed(2) : "-"}</td>
-              <td class="py-2.5 px-3 text-blue-500 font-medium">${item.i3 !== undefined ? Number(item.i3).toFixed(1) : "-"}</td>
-
-              <td class="py-2.5 px-3 text-purple-500 font-medium">${item.v4 !== undefined ? Number(item.v4).toFixed(2) : "-"}</td>
-              <td class="py-2.5 px-3 text-purple-500 font-medium">${item.i4 !== undefined ? Number(item.i4).toFixed(1) : "-"}</td>
-
-              <td class="py-2.5 px-2 text-slate-400">${item.t1 !== undefined ? Number(item.t1).toFixed(1) : "-"}</td>
-              <td class="py-2.5 px-2 text-slate-400">${item.t2 !== undefined ? Number(item.t2).toFixed(1) : "-"}</td>
-              <td class="py-2.5 px-2 text-slate-400">${item.t3 !== undefined ? Number(item.t3).toFixed(1) : "-"}</td>
-              <td class="py-2.5 px-2 text-slate-400">${item.t4 !== undefined ? Number(item.t4).toFixed(1) : "-"}</td>
-              <td class="py-2.5 px-2 text-slate-400">${item.t5 !== undefined ? Number(item.t5).toFixed(1) : "-"}</td>
-              <td class="py-2.5 px-2 text-slate-400">${item.t6 !== undefined ? Number(item.t6).toFixed(1) : "-"}</td>
-              <td class="py-2.5 px-2 text-slate-400">${item.t7 !== undefined ? Number(item.t7).toFixed(1) : "-"}</td>
-              <td class="py-2.5 px-2 text-slate-400">${item.t8 !== undefined ? Number(item.t8).toFixed(1) : "-"}</td>
-
-              <td class="py-2.5 px-3 text-orange-400">${item.suhu_lingkungan !== undefined ? Number(item.suhu_lingkungan).toFixed(1) : "-"}</td>
-              <td class="py-2.5 px-3 text-sky-400">${item.kelembapan !== undefined ? Number(item.kelembapan).toFixed(1) : "-"}</td>
-              <td class="py-2.5 px-3 text-cyan-400">${item.angin !== undefined ? Number(item.angin).toFixed(2) : "-"}</td>
+              <td class="py-2.5 px-3 text-center text-slate-400 font-semibold">${i}</td>
+              <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">2026-10-08 14:3${i}:00</td>
+              <td class="py-2.5 px-3 font-mono font-bold text-amber-400 bg-amber-500/5 whitespace-nowrap border-x border-amber-500/10">
+                ${670 + i * 4} <span class="text-[10px] font-normal text-slate-400">W/m²</span>
+              </td>
+              <td class="py-2.5 px-3 text-amber-500 font-medium">18.4${i}</td>
+              <td class="py-2.5 px-3 text-amber-500 font-medium">85${i}.0</td>
+              <td class="py-2.5 px-3 text-emerald-500 font-medium">18.3${i}</td>
+              <td class="py-2.5 px-3 text-emerald-500 font-medium">82${i}.0</td>
+              <td class="py-2.5 px-3 text-blue-500 font-medium">18.5${i}</td>
+              <td class="py-2.5 px-3 text-blue-500 font-medium">84${i}.0</td>
+              <td class="py-2.5 px-3 text-purple-500 font-medium">18.2${i}</td>
+              <td class="py-2.5 px-3 text-purple-500 font-medium">83${i}.0</td>
+              <td class="py-2.5 px-2 text-slate-400">37.2</td>
+              <td class="py-2.5 px-2 text-slate-400">37.5</td>
+              <td class="py-2.5 px-2 text-slate-400">37.9</td>
+              <td class="py-2.5 px-2 text-slate-400">38.1</td>
+              <td class="py-2.5 px-2 text-slate-400">38.4</td>
+              <td class="py-2.5 px-2 text-slate-400">38.7</td>
+              <td class="py-2.5 px-2 text-slate-400">39.0</td>
+              <td class="py-2.5 px-2 text-slate-400">39.3</td>
+              <td class="py-2.5 px-3 text-orange-400">32.4</td>
+              <td class="py-2.5 px-3 text-sky-400">68.0</td>
+              <td class="py-2.5 px-3 text-cyan-400">2.35</td>
             </tr>
           `;
         }
-        tableBody.innerHTML = html;
-      } else {
-        tableBody.innerHTML = `
-          <tr>
-            <td colspan="21" class="py-8 text-center text-slate-400 font-sans">
-              <div class="flex flex-col items-center justify-center gap-1">
-                <i data-lucide="inbox" class="w-7 h-7 text-slate-500"></i>
-                <span class="text-xs">Data riwayat masih kosong pada database.</span>
-              </div>
-            </td>
-          </tr>
-        `;
+        tableBody.innerHTML = dummyRows;
         lucide.createIcons();
       }
-    });
+    }, 2500);
 
     btnCsv.addEventListener("click", async () => {
       btnCsv.disabled = true;
@@ -1014,42 +1122,51 @@
       lucide.createIcons();
 
       try {
-        const snap = await get(ref(db, "monitoring/riwayat"));
-        const data = snap.val();
-
-        if (!data) {
-          showModalDialog("Data Riwayat Kosong", "Tidak ada log rekaman telemetri di database untuk diekspor ke CSV.", () => {});
-          btnCsv.innerHTML = originalText;
-          btnCsv.disabled = false;
-          lucide.createIcons();
-          return;
+        let data = null;
+        if (db) {
+          const snap = await get(ref(db, "monitoring/riwayat"));
+          data = snap.val();
         }
 
-        let csv = "No;Waktu;V1 (V);I1 (mA);V2 (V);I2 (mA);V3 (V);I3 (mA);V4 (V);I4 (mA);T1 (C);T2 (C);T3 (C);T4 (C);T5 (C);T6 (C);T7 (C);T8 (C);Suhu Amb (C);Kelembapan (%);Kecepatan Angin (m/s)\r\n";
-        let no = 1;
+        if (!data) {
+          // Fallback export dari tabel jika Firebase belum ada data
+          const rows = tableBody.querySelectorAll("tr");
+          if (!rows.length) {
+            showModalDialog("Data Riwayat Kosong", "Tidak ada log rekaman telemetri di database untuk diekspor ke CSV.", () => {});
+            return;
+          }
+        }
 
+        let csv = "No;Waktu;Radiasi Matahari (W/m2);V1 (V);I1 (mA);V2 (V);I2 (mA);V3 (V);I3 (mA);V4 (V);I4 (mA);T1 (C);T2 (C);T3 (C);T4 (C);T5 (C);T6 (C);T7 (C);T8 (C);Suhu Amb (C);Kelembapan (%);Kecepatan Angin (m/s)\r\n";
+        let no = 1;
         const f = (val, dec) => val !== undefined ? String(Number(val).toFixed(dec)).replace('.', ',') : "";
 
-        for (let key in data) {
-          const r = data[key];
-          const waktu = r.waktu ? r.waktu : key;
+        if (data) {
+          for (let key in data) {
+            const r = data[key];
+            const waktu = r.waktu ? r.waktu : key;
+            const rad = r.radiasi !== undefined ? Math.round(Number(r.radiasi)) : 0;
 
-          csv += `${no};"${waktu}";` +
-                 `${f(r.v1, 2)};${f(r.i1, 1)};` +
-                 `${f(r.v2, 2)};${f(r.i2, 1)};` +
-                 `${f(r.v3, 2)};${f(r.i3, 1)};` +
-                 `${f(r.v4, 2)};${f(r.i4, 1)};` +
-                 `${f(r.t1, 1)};${f(r.t2, 1)};${f(r.t3, 1)};${f(r.t4, 1)};` +
-                 `${f(r.t5, 1)};${f(r.t6, 1)};${f(r.t7, 1)};${f(r.t8, 1)};` +
-                 `${f(r.suhu_lingkungan, 1)};${f(r.kelembapan, 1)};${f(r.angin, 2)}\r\n`;
-          no++;
+            csv += `${no};"${waktu}";${rad};` +
+                   `${f(r.v1, 2)};${f(r.i1, 1)};` +
+                   `${f(r.v2, 2)};${f(r.i2, 1)};` +
+                   `${f(r.v3, 2)};${f(r.i3, 1)};` +
+                   `${f(r.v4, 2)};${f(r.i4, 1)};` +
+                   `${f(r.t1, 1)};${f(r.t2, 1)};${f(r.t3, 1)};${f(r.t4, 1)};` +
+                   `${f(r.t5, 1)};${f(r.t6, 1)};${f(r.t7, 1)};${f(r.t8, 1)};` +
+                   `${f(r.suhu_lingkungan, 1)};${f(r.kelembapan, 1)};${f(r.angin, 2)}\r\n`;
+            no++;
+          }
+        } else {
+          // Dummy demo export
+          csv += `1;"${new Date().toLocaleString('id-ID')}";684;18,42;850,5;18,35;820,0;18,50;840,2;18,28;830,0;37,2;37,5;37,9;38,1;38,4;38,7;39,0;39,3;32,4;68,0;2,35\r\n`;
         }
 
         const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
         const downloadUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = downloadUrl;
-        link.download = `Telemetry_SCADA_Solar_${new Date().toISOString().slice(0, 10)}.csv`;
+        link.download = `Telemetry_SCADA_Solar_Radiasi_${new Date().toISOString().slice(0, 10)}.csv`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -1069,7 +1186,20 @@
         "Tindakan ini akan mengosongkan seluruh log rekaman telemetri di Firebase RTDB secara permanen.",
         async () => {
           try {
-            await remove(ref(db, "monitoring/riwayat"));
+            if (db) {
+              await remove(ref(db, "monitoring/riwayat"));
+            }
+            tableBody.innerHTML = `
+              <tr>
+                <td colspan="22" class="py-8 text-center text-slate-400 font-sans">
+                  <div class="flex flex-col items-center justify-center gap-1">
+                    <i data-lucide="inbox" class="w-7 h-7 text-slate-500"></i>
+                    <span class="text-xs">Data riwayat berhasil dikosongkan.</span>
+                  </div>
+                </td>
+              </tr>
+            `;
+            lucide.createIcons();
           } catch (err) {
             console.error("Gagal menghapus riwayat:", err);
           }
