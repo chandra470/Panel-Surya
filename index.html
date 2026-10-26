@@ -641,28 +641,43 @@
     const chartPV3 = [];
     const chartPV4 = [];
 
-    // Helper untuk memfilter dataset agar berjarak minimal 10 menit (600.000 ms)
-    const TEN_MINUTES_MS = 10 * 60 * 1000;
+    // --- PARSER WAKTU MANUAL (ANTI-GAGAL) & FILTER 10 MENIT ---
+    function parseCustomTime(timeStr) {
+      if (!timeStr) return 0;
+      const parts = String(timeStr).trim().split(" ");
+      if (parts.length < 2) return 0;
+      const dateParts = parts[0].split("-").map(Number);
+      const timeParts = parts[1].split(":").map(Number);
+      if (dateParts.length < 3 || timeParts.length < 2) return 0;
+      return new Date(dateParts[0], dateParts[1] - 1, dateParts[2], timeParts[0], timeParts[1], timeParts[2] || 0).getTime();
+    }
+
+    const TEN_MINUTES_MS = 10 * 60 * 1000; // 600.000 ms
+
     function filterDataBy10Minutes(dataObj) {
       if (!dataObj) return [];
       const keys = Object.keys(dataObj);
+      const items = keys.map(k => ({ key: k, ...dataObj[k] }));
+
+      // Urutkan data berdasarkan waktu lama ke baru secara kronologis
+      items.sort((a, b) => {
+        const tA = parseCustomTime(a.waktu);
+        const tB = parseCustomTime(b.waktu);
+        return tA - tB;
+      });
+
       const filtered = [];
       let lastTimestamp = 0;
 
-      for (let k of keys) {
-        const item = dataObj[k];
-        let itemTime = 0;
-        if (item.waktu) {
-          // Bersihkan format string tanggal agar valid diparse oleh Date
-          itemTime = new Date(item.waktu.replace(' ', 'T')).getTime();
-        }
-
-        // Jika waktu tidak terbaca atau selisih waktu sudah >= 10 menit
-        if (!itemTime || isNaN(itemTime) || (itemTime - lastTimestamp >= TEN_MINUTES_MS)) {
-          if (itemTime && !isNaN(itemTime)) {
+      for (let item of items) {
+        const itemTime = parseCustomTime(item.waktu);
+        
+        // Hanya ambil data yang selisihnya >= 10 menit dari data sebelumnya
+        if (itemTime === 0 || lastTimestamp === 0 || (itemTime - lastTimestamp >= TEN_MINUTES_MS)) {
+          if (itemTime !== 0) {
             lastTimestamp = itemTime;
           }
-          filtered.push({ key: k, ...item });
+          filtered.push(item);
         }
       }
       return filtered;
@@ -1151,7 +1166,6 @@
           rawData = snap.val();
         }
 
-        // Terapkan saringan 10 menit ke seluruh isi riwayat database
         const filteredList = rawData ? filterDataBy10Minutes(rawData) : [];
 
         if (filteredList.length === 0) {
