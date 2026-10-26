@@ -641,9 +641,32 @@
     const chartPV3 = [];
     const chartPV4 = [];
 
-    // --- VARIABEL FILTER PENYIMPANAN RIWAYAT PER 10 MENIT ---
-    let waktuTerakhirDisimpan = 0;
-    const INTERVAL_10_MENIT_MS = 10 * 60 * 1000; // 600.000 ms
+    // Helper untuk memfilter dataset agar berjarak minimal 10 menit (600.000 ms)
+    const TEN_MINUTES_MS = 10 * 60 * 1000;
+    function filterDataBy10Minutes(dataObj) {
+      if (!dataObj) return [];
+      const keys = Object.keys(dataObj);
+      const filtered = [];
+      let lastTimestamp = 0;
+
+      for (let k of keys) {
+        const item = dataObj[k];
+        let itemTime = 0;
+        if (item.waktu) {
+          // Bersihkan format string tanggal agar valid diparse oleh Date
+          itemTime = new Date(item.waktu.replace(' ', 'T')).getTime();
+        }
+
+        // Jika waktu tidak terbaca atau selisih waktu sudah >= 10 menit
+        if (!itemTime || isNaN(itemTime) || (itemTime - lastTimestamp >= TEN_MINUTES_MS)) {
+          if (itemTime && !isNaN(itemTime)) {
+            lastTimestamp = itemTime;
+          }
+          filtered.push({ key: k, ...item });
+        }
+      }
+      return filtered;
+    }
 
     function initTrendChart() {
       const ctx = document.getElementById('trendChart');
@@ -875,7 +898,6 @@
       console.warn("Firebase Init Error:", err);
     }
 
-    // Helper untuk klasifikasi status radiasi
     function getRadiationCategory(w_m2) {
       if (w_m2 <= 10) return { label: "Malam Hari", color: "text-slate-400 bg-slate-800" };
       if (w_m2 < 300) return { label: "Rendah", color: "text-amber-400 bg-amber-950/60" };
@@ -889,7 +911,7 @@
         if (!val) return;
         isFirebaseConnected = true;
 
-        // 1. Nilai Radiasi Matahari (SEM228A)
+        // 1. Nilai Radiasi Matahari
         const radValue = val.radiasi !== undefined ? Math.round(Number(val.radiasi)) : 0;
         kpiRadiation.innerText = radValue;
         radiationCardVal.innerText = radValue;
@@ -898,7 +920,7 @@
         radiationStatusPill.innerText = radCat.label;
         radiationStatusPill.className = `px-2 py-0.5 rounded text-[10px] font-mono ${radCat.color}`;
 
-        // 2. 4x INA219 (V & I) + Automatic Power Calculation
+        // 2. 4x INA219 (V & I) + Perhitungan Daya
         let totalPower = 0;
         for (let i = 1; i <= 4; i++) {
           const v = val[`v${i}`] !== undefined ? Number(val[`v${i}`]) : 0;
@@ -916,7 +938,7 @@
         }
         kpiTotalPower.innerText = totalPower.toFixed(2);
 
-        // 3. 8x DS18B20 Module surface temperatures
+        // 3. 8x DS18B20 Suhu Permukaan Modul
         let sumTemp = 0;
         let countTemp = 0;
         let minTemp = Infinity;
@@ -943,7 +965,7 @@
           if (tempSpreadEl) tempSpreadEl.innerText = `Δ ${spread.toFixed(1)} °C (${minTemp.toFixed(1)}° - ${maxTemp.toFixed(1)}°)`;
         }
 
-        // 4. Meteorology DHT22 & Anemometer
+        // 4. Meteorologi DHT22 & Anemometer
         const envTemp = val.suhu_lingkungan !== undefined ? Number(val.suhu_lingkungan).toFixed(1) : "--";
         const envHum = val.kelembapan !== undefined ? Number(val.kelembapan).toFixed(1) : "--";
         const envWind = val.angin !== undefined ? Number(val.angin).toFixed(2) : "--";
@@ -954,7 +976,7 @@
 
         txtStatus.innerText = "Sinkron (Aktif)";
 
-        // 5. Update Chart real-time points
+        // 5. Update Real-time Chart Points
         if (trendChartInstance) {
           const now = new Date();
           const timeLabel = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
@@ -975,75 +997,39 @@
 
           trendChartInstance.update();
         }
-
-        // --- PENYIMPANAN DATA LOG SETIAP 10 MENIT KE FIREBASE ---
-        const waktuSekarang = Date.now();
-        if (waktuSekarang - waktuTerakhirDisimpan >= INTERVAL_10_MENIT_MS) {
-          waktuTerakhirDisimpan = waktuSekarang;
-
-          const now = new Date();
-          const pad = (n) => String(n).padStart(2, '0');
-          const formatWaktu = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-
-          const newLogRef = push(ref(db, "monitoring/riwayat"));
-          set(newLogRef, {
-            waktu: formatWaktu,
-            radiasi: val.radiasi !== undefined ? val.radiasi : 0,
-            v1: val.v1 !== undefined ? val.v1 : 0,
-            i1: val.i1 !== undefined ? val.i1 : 0,
-            v2: val.v2 !== undefined ? val.v2 : 0,
-            i2: val.i2 !== undefined ? val.i2 : 0,
-            v3: val.v3 !== undefined ? val.v3 : 0,
-            i3: val.i3 !== undefined ? val.i3 : 0,
-            v4: val.v4 !== undefined ? val.v4 : 0,
-            i4: val.i4 !== undefined ? val.i4 : 0,
-            t1: val.t1 !== undefined ? val.t1 : 0,
-            t2: val.t2 !== undefined ? val.t2 : 0,
-            t3: val.t3 !== undefined ? val.t3 : 0,
-            t4: val.t4 !== undefined ? val.t4 : 0,
-            t5: val.t5 !== undefined ? val.t5 : 0,
-            t6: val.t6 !== undefined ? val.t6 : 0,
-            t7: val.t7 !== undefined ? val.t7 : 0,
-            t8: val.t8 !== undefined ? val.t8 : 0,
-            suhu_lingkungan: val.suhu_lingkungan !== undefined ? val.suhu_lingkungan : 0,
-            kelembapan: val.kelembapan !== undefined ? val.kelembapan : 0,
-            angin: val.angin !== undefined ? val.angin : 0
-          });
-        }
       });
 
+      // --- LISTENER TABEL RIWAYAT DENGAN FILTER 10 MENIT SEKALI ---
       onValue(ref(db, "monitoring/riwayat"), (snap) => {
         const data = snap.val();
         if (data) {
           let html = "";
           let no = 1;
-          const keys = Object.keys(data).slice(-20).reverse();
-          for (let k of keys) {
-            const item = data[k];
+
+          // Saring seluruh rekaman agar berjarak minimal 10 menit
+          const filteredItems = filterDataBy10Minutes(data);
+
+          // Ambil 20 rekaman terakhir yang lolos filter 10 menit, urutkan terbaru di atas
+          const displayItems = filteredItems.slice(-20).reverse();
+
+          for (let item of displayItems) {
             const radVal = item.radiasi !== undefined ? Math.round(Number(item.radiasi)) : "-";
 
             html += `
               <tr class="hover:bg-slate-50 dark:hover:bg-[#121f3f] transition-colors">
                 <td class="py-2.5 px-3 text-center text-slate-400 font-semibold">${no++}</td>
-                <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">${item.waktu || k}</td>
-                
-                <!-- Kolom Radiasi Matahari W/m2 -->
+                <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">${item.waktu || item.key}</td>
                 <td class="py-2.5 px-3 font-mono font-bold text-amber-400 bg-amber-500/5 whitespace-nowrap border-x border-amber-500/10">
                   ${radVal} <span class="text-[10px] font-normal text-slate-400">W/m²</span>
                 </td>
-
                 <td class="py-2.5 px-3 text-amber-500 font-medium">${item.v1 !== undefined ? Number(item.v1).toFixed(2) : "-"}</td>
                 <td class="py-2.5 px-3 text-amber-500 font-medium">${item.i1 !== undefined ? Number(item.i1).toFixed(1) : "-"}</td>
-
                 <td class="py-2.5 px-3 text-emerald-500 font-medium">${item.v2 !== undefined ? Number(item.v2).toFixed(2) : "-"}</td>
                 <td class="py-2.5 px-3 text-emerald-500 font-medium">${item.i2 !== undefined ? Number(item.i2).toFixed(1) : "-"}</td>
-
                 <td class="py-2.5 px-3 text-blue-500 font-medium">${item.v3 !== undefined ? Number(item.v3).toFixed(2) : "-"}</td>
                 <td class="py-2.5 px-3 text-blue-500 font-medium">${item.i3 !== undefined ? Number(item.i3).toFixed(1) : "-"}</td>
-
                 <td class="py-2.5 px-3 text-purple-500 font-medium">${item.v4 !== undefined ? Number(item.v4).toFixed(2) : "-"}</td>
                 <td class="py-2.5 px-3 text-purple-500 font-medium">${item.i4 !== undefined ? Number(item.i4).toFixed(1) : "-"}</td>
-
                 <td class="py-2.5 px-2 text-slate-400">${item.t1 !== undefined ? Number(item.t1).toFixed(1) : "-"}</td>
                 <td class="py-2.5 px-2 text-slate-400">${item.t2 !== undefined ? Number(item.t2).toFixed(1) : "-"}</td>
                 <td class="py-2.5 px-2 text-slate-400">${item.t3 !== undefined ? Number(item.t3).toFixed(1) : "-"}</td>
@@ -1052,7 +1038,6 @@
                 <td class="py-2.5 px-2 text-slate-400">${item.t6 !== undefined ? Number(item.t6).toFixed(1) : "-"}</td>
                 <td class="py-2.5 px-2 text-slate-400">${item.t7 !== undefined ? Number(item.t7).toFixed(1) : "-"}</td>
                 <td class="py-2.5 px-2 text-slate-400">${item.t8 !== undefined ? Number(item.t8).toFixed(1) : "-"}</td>
-
                 <td class="py-2.5 px-3 text-orange-400">${item.suhu_lingkungan !== undefined ? Number(item.suhu_lingkungan).toFixed(1) : "-"}</td>
                 <td class="py-2.5 px-3 text-sky-400">${item.kelembapan !== undefined ? Number(item.kelembapan).toFixed(1) : "-"}</td>
                 <td class="py-2.5 px-3 text-cyan-400">${item.angin !== undefined ? Number(item.angin).toFixed(2) : "-"}</td>
@@ -1080,7 +1065,6 @@
       if (!isFirebaseConnected) {
         txtStatus.innerText = "Mode Simulasi Aktif";
         
-        // Buat data tiruan awal
         const mockRad = 684;
         kpiRadiation.innerText = mockRad;
         radiationCardVal.innerText = mockRad;
@@ -1117,7 +1101,6 @@
         dhtHumEl.innerText = "68.0";
         windEl.innerText = "2.35";
 
-        // Isi dummy riwayat tabel jika masih loader
         let dummyRows = "";
         for (let i = 1; i <= 5; i++) {
           dummyRows += `
@@ -1154,6 +1137,7 @@
       }
     }, 2500);
 
+    // --- EKSPOR CSV DENGAN FILTER 10 MENIT SEKALI ---
     btnCsv.addEventListener("click", async () => {
       btnCsv.disabled = true;
       const originalText = btnCsv.innerHTML;
@@ -1161,44 +1145,37 @@
       lucide.createIcons();
 
       try {
-        let data = null;
+        let rawData = null;
         if (db) {
           const snap = await get(ref(db, "monitoring/riwayat"));
-          data = snap.val();
+          rawData = snap.val();
         }
 
-        if (!data) {
-          // Fallback export dari tabel jika Firebase belum ada data
-          const rows = tableBody.querySelectorAll("tr");
-          if (!rows.length) {
-            showModalDialog("Data Riwayat Kosong", "Tidak ada log rekaman telemetri di database untuk diekspor ke CSV.", () => {});
-            return;
-          }
+        // Terapkan saringan 10 menit ke seluruh isi riwayat database
+        const filteredList = rawData ? filterDataBy10Minutes(rawData) : [];
+
+        if (filteredList.length === 0) {
+          showModalDialog("Data Riwayat Kosong", "Tidak ada log rekaman telemetri di database untuk diekspor ke CSV.", () => {});
+          return;
         }
 
         let csv = "No;Waktu;Radiasi Matahari (W/m2);V1 (V);I1 (mA);V2 (V);I2 (mA);V3 (V);I3 (mA);V4 (V);I4 (mA);T1 (C);T2 (C);T3 (C);T4 (C);T5 (C);T6 (C);T7 (C);T8 (C);Suhu Amb (C);Kelembapan (%);Kecepatan Angin (m/s)\r\n";
         let no = 1;
         const f = (val, dec) => val !== undefined ? String(Number(val).toFixed(dec)).replace('.', ',') : "";
 
-        if (data) {
-          for (let key in data) {
-            const r = data[key];
-            const waktu = r.waktu ? r.waktu : key;
-            const rad = r.radiasi !== undefined ? Math.round(Number(r.radiasi)) : 0;
+        for (let r of filteredList) {
+          const waktu = r.waktu ? r.waktu : r.key;
+          const rad = r.radiasi !== undefined ? Math.round(Number(r.radiasi)) : 0;
 
-            csv += `${no};"${waktu}";${rad};` +
-                   `${f(r.v1, 2)};${f(r.i1, 1)};` +
-                   `${f(r.v2, 2)};${f(r.i2, 1)};` +
-                   `${f(r.v3, 2)};${f(r.i3, 1)};` +
-                   `${f(r.v4, 2)};${f(r.i4, 1)};` +
-                   `${f(r.t1, 1)};${f(r.t2, 1)};${f(r.t3, 1)};${f(r.t4, 1)};` +
-                   `${f(r.t5, 1)};${f(r.t6, 1)};${f(r.t7, 1)};${f(r.t8, 1)};` +
-                   `${f(r.suhu_lingkungan, 1)};${f(r.kelembapan, 1)};${f(r.angin, 2)}\r\n`;
-            no++;
-          }
-        } else {
-          // Dummy demo export
-          csv += `1;"${new Date().toLocaleString('id-ID')}";684;18,42;850,5;18,35;820,0;18,50;840,2;18,28;830,0;37,2;37,5;37,9;38,1;38,4;38,7;39,0;39,3;32,4;68,0;2,35\r\n`;
+          csv += `${no};"${waktu}";${rad};` +
+                 `${f(r.v1, 2)};${f(r.i1, 1)};` +
+                 `${f(r.v2, 2)};${f(r.i2, 1)};` +
+                 `${f(r.v3, 2)};${f(r.i3, 1)};` +
+                 `${f(r.v4, 2)};${f(r.i4, 1)};` +
+                 `${f(r.t1, 1)};${f(r.t2, 1)};${f(r.t3, 1)};${f(r.t4, 1)};` +
+                 `${f(r.t5, 1)};${f(r.t6, 1)};${f(r.t7, 1)};${f(r.t8, 1)};` +
+                 `${f(r.suhu_lingkungan, 1)};${f(r.kelembapan, 1)};${f(r.angin, 2)}\r\n`;
+          no++;
         }
 
         const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
