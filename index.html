@@ -177,7 +177,10 @@
             <span>&bull;</span>
             <span class="flex items-center gap-1"><i data-lucide="sun" class="w-3.5 h-3.5 text-amber-500"></i> SEM228A</span>
             <span>&bull;</span>
-            <span class="text-emerald-500 font-semibold flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 pulse-ring"></span> Online</span>
+            <span id="header-esp-badge" class="text-slate-400 font-semibold flex items-center gap-1">
+              <span id="header-esp-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+              <span id="header-esp-text">Standby</span>
+            </span>
           </p>
         </div>
       </div>
@@ -191,8 +194,8 @@
 
         <!-- Connection Status Indicator -->
         <div class="flex items-center gap-2 bg-slate-100 dark:bg-[#111f3d] px-3.5 py-2 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-800/80">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-ring"></span>
-          <span id="txt-status" class="text-slate-700 dark:text-slate-300 font-mono text-xs">Tersambung</span>
+          <span id="status-dot" class="w-2 h-2 rounded-full bg-amber-500"></span>
+          <span id="txt-status" class="text-slate-700 dark:text-slate-300 font-mono text-xs">Menunggu ESP32...</span>
         </div>
 
         <!-- Theme Toggle -->
@@ -223,7 +226,7 @@
         </div>
         <div class="mt-1 text-[11px] text-slate-400 dark:text-slate-500 flex items-center justify-between">
           <span class="flex items-center gap-1"><i data-lucide="gauge" class="w-3 h-3 text-amber-400"></i> RS485 Modbus RTU</span>
-          <span id="radiation-status-pill" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-400 font-mono">Siang Rendah</span>
+          <span id="radiation-status-pill" class="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-400 font-mono">Menunggu</span>
         </div>
       </div>
 
@@ -517,7 +520,7 @@
         <div>
           <div class="flex items-center gap-2">
             <i data-lucide="table" class="w-4 h-4 text-blue-500"></i>
-            <h2 class="text-sm font-bold text-slate-800 dark:text-white">Log Telemetri Multi-Sensor (Real-time Records)</h2>
+            <h2 class="text-sm font-bold text-slate-800 dark:text-white">Log Telemetri Multi-Sensor (Interval 10 Menit)</h2>
           </div>
           <p class="text-xs text-slate-400 mt-0.5">Menampilkan 20 rekam data komprehensif terakhir (PV, DS18B20, Cuaca & Radiasi Matahari)</p>
         </div>
@@ -590,7 +593,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, onValue, get, remove, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     // Initialize Lucide icons
     lucide.createIcons();
@@ -611,6 +614,10 @@
     const btnTheme = document.getElementById("btn-theme");
     const themeIcon = document.getElementById("theme-icon");
     const txtStatus = document.getElementById("txt-status");
+    const statusDot = document.getElementById("status-dot");
+    const headerEspText = document.getElementById("header-esp-text");
+    const headerEspDot = document.getElementById("header-esp-dot");
+    const headerEspBadge = document.getElementById("header-esp-badge");
 
     // Modal Alert elements
     const customModal = document.getElementById("custom-modal");
@@ -641,7 +648,7 @@
     const chartPV3 = [];
     const chartPV4 = [];
 
-    // --- PARSER WAKTU MANUAL (ANTI-GAGAL) & FILTER 10 MENIT ---
+    // --- PARSER WAKTU MANUAL & FILTER 10 MENIT DENGAN TOLERANSI ---
     function parseCustomTime(timeStr) {
       if (!timeStr) return 0;
       const parts = String(timeStr).trim().split(" ");
@@ -652,7 +659,8 @@
       return new Date(dateParts[0], dateParts[1] - 1, dateParts[2], timeParts[0], timeParts[1], timeParts[2] || 0).getTime();
     }
 
-    const TEN_MINUTES_MS = 10 * 60 * 1000; // 600.000 ms
+    // Toleransi 15 detik (585.000 ms) agar data interval 10 menit dari ESP32 tidak terbuang jika bergeser 1-2 detik
+    const TEN_MINUTES_TOLERANCE_MS = (10 * 60 - 15) * 1000;
 
     function filterDataBy10Minutes(dataObj) {
       if (!dataObj) return [];
@@ -672,8 +680,7 @@
       for (let item of items) {
         const itemTime = parseCustomTime(item.waktu);
         
-        // Hanya ambil data yang selisihnya >= 10 menit dari data sebelumnya
-        if (itemTime === 0 || lastTimestamp === 0 || (itemTime - lastTimestamp >= TEN_MINUTES_MS)) {
+        if (itemTime === 0 || lastTimestamp === 0 || (itemTime - lastTimestamp >= TEN_MINUTES_TOLERANCE_MS)) {
           if (itemTime !== 0) {
             lastTimestamp = itemTime;
           }
@@ -904,13 +911,41 @@
     };
 
     let app, db;
-    let isFirebaseConnected = false;
+    let lastDataReceivedAt = 0;
 
     try {
       app = initializeApp(firebaseConfig);
       db = getDatabase(app);
     } catch (err) {
       console.warn("Firebase Init Error:", err);
+    }
+
+    function setEspStatusUI(state) {
+      if (state === "online") {
+        txtStatus.innerText = "Sinkron (Aktif)";
+        txtStatus.className = "text-emerald-500 font-mono text-xs font-semibold";
+        statusDot.className = "w-2 h-2 rounded-full bg-emerald-500 pulse-ring";
+
+        headerEspText.innerText = "Online";
+        headerEspBadge.className = "text-emerald-500 font-semibold flex items-center gap-1";
+        headerEspDot.className = "w-2 h-2 rounded-full bg-emerald-500 pulse-ring";
+      } else if (state === "offline") {
+        txtStatus.innerText = "ESP32 Offline";
+        txtStatus.className = "text-red-500 font-mono text-xs font-semibold";
+        statusDot.className = "w-2 h-2 rounded-full bg-red-500";
+
+        headerEspText.innerText = "Offline";
+        headerEspBadge.className = "text-red-500 font-semibold flex items-center gap-1";
+        headerEspDot.className = "w-2 h-2 rounded-full bg-red-500";
+      } else {
+        txtStatus.innerText = "Menunggu Data ESP32...";
+        txtStatus.className = "text-amber-500 font-mono text-xs font-semibold";
+        statusDot.className = "w-2 h-2 rounded-full bg-amber-500";
+
+        headerEspText.innerText = "Standby";
+        headerEspBadge.className = "text-slate-400 font-semibold flex items-center gap-1";
+        headerEspDot.className = "w-2 h-2 rounded-full bg-slate-500";
+      }
     }
 
     function getRadiationCategory(w_m2) {
@@ -920,11 +955,36 @@
       return { label: "Tinggi (Peak)", color: "text-orange-400 bg-orange-950/60 font-bold" };
     }
 
+    // Cek berkala apakah ESP32 berhenti mengirim data (> 20 detik)
+    setInterval(() => {
+      if (lastDataReceivedAt > 0) {
+        const diffSec = (Date.now() - lastDataReceivedAt) / 1000;
+        if (diffSec > 20) {
+          setEspStatusUI("offline");
+        }
+      }
+    }, 5000);
+
     if (db) {
       onValue(ref(db, "monitoring/realtime"), (snap) => {
         const val = snap.val();
-        if (!val) return;
-        isFirebaseConnected = true;
+        if (!val) {
+          setEspStatusUI("standby");
+          return;
+        }
+
+        // Validasi apakah timestamp dari ESP32 masih baru (dalam rentang 60 detik terakhir)
+        const espTimeMs = parseCustomTime(val.last_update);
+        if (espTimeMs > 0 && Math.abs(Date.now() - espTimeMs) < 60000) {
+          lastDataReceivedAt = Date.now();
+          setEspStatusUI("online");
+        } else if (lastDataReceivedAt > 0) {
+          lastDataReceivedAt = Date.now();
+          setEspStatusUI("online");
+        } else {
+          // Data lama yang tersimpan saat halaman baru dibuka
+          setEspStatusUI("offline");
+        }
 
         // 1. Nilai Radiasi Matahari
         const radValue = val.radiasi !== undefined ? Math.round(Number(val.radiasi)) : 0;
@@ -989,8 +1049,6 @@
         dhtHumEl.innerText = envHum;
         windEl.innerText = envWind;
 
-        txtStatus.innerText = "Sinkron (Aktif)";
-
         // 5. Update Real-time Chart Points
         if (trendChartInstance) {
           const now = new Date();
@@ -1021,7 +1079,7 @@
           let html = "";
           let no = 1;
 
-          // Saring seluruh rekaman agar berjarak minimal 10 menit
+          // Saring seluruh rekaman agar berjarak minimal 10 menit (dengan toleransi 15 detik)
           const filteredItems = filterDataBy10Minutes(data);
 
           // Ambil 20 rekaman terakhir yang lolos filter 10 menit, urutkan terbaru di atas
@@ -1075,82 +1133,6 @@
         }
       });
     }
-
-    setTimeout(() => {
-      if (!isFirebaseConnected) {
-        txtStatus.innerText = "Mode Simulasi Aktif";
-        
-        const mockRad = 684;
-        kpiRadiation.innerText = mockRad;
-        radiationCardVal.innerText = mockRad;
-        const cat = getRadiationCategory(mockRad);
-        radiationStatusPill.innerText = cat.label;
-        radiationStatusPill.className = `px-2 py-0.5 rounded text-[10px] font-mono ${cat.color}`;
-
-        document.getElementById("v1").innerText = "18.42";
-        document.getElementById("i1").innerText = "850.5";
-        document.getElementById("p1").innerText = "15.67";
-
-        document.getElementById("v2").innerText = "18.35";
-        document.getElementById("i2").innerText = "820.0";
-        document.getElementById("p2").innerText = "15.05";
-
-        document.getElementById("v3").innerText = "18.50";
-        document.getElementById("i3").innerText = "840.2";
-        document.getElementById("p3").innerText = "15.54";
-
-        document.getElementById("v4").innerText = "18.28";
-        document.getElementById("i4").innerText = "830.0";
-        document.getElementById("p4").innerText = "15.17";
-
-        kpiTotalPower.innerText = "61.43";
-        kpiAvgTemp.innerText = "38.2";
-        if (tempSpreadEl) tempSpreadEl.innerText = "Δ 2.4 °C (37.1° - 39.5°)";
-
-        for (let i = 1; i <= 8; i++) {
-          const tEl = document.getElementById(`t${i}`);
-          if (tEl) tEl.innerText = (37.0 + (i * 0.3)).toFixed(1);
-        }
-
-        dhtTempEl.innerText = "32.4";
-        dhtHumEl.innerText = "68.0";
-        windEl.innerText = "2.35";
-
-        let dummyRows = "";
-        for (let i = 1; i <= 5; i++) {
-          dummyRows += `
-            <tr class="hover:bg-slate-50 dark:hover:bg-[#121f3f] transition-colors">
-              <td class="py-2.5 px-3 text-center text-slate-400 font-semibold">${i}</td>
-              <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300 whitespace-nowrap">2026-10-08 14:3${i}:00</td>
-              <td class="py-2.5 px-3 font-mono font-bold text-amber-400 bg-amber-500/5 whitespace-nowrap border-x border-amber-500/10">
-                ${670 + i * 4} <span class="text-[10px] font-normal text-slate-400">W/m²</span>
-              </td>
-              <td class="py-2.5 px-3 text-amber-500 font-medium">18.4${i}</td>
-              <td class="py-2.5 px-3 text-amber-500 font-medium">85${i}.0</td>
-              <td class="py-2.5 px-3 text-emerald-500 font-medium">18.3${i}</td>
-              <td class="py-2.5 px-3 text-emerald-500 font-medium">82${i}.0</td>
-              <td class="py-2.5 px-3 text-blue-500 font-medium">18.5${i}</td>
-              <td class="py-2.5 px-3 text-blue-500 font-medium">84${i}.0</td>
-              <td class="py-2.5 px-3 text-purple-500 font-medium">18.2${i}</td>
-              <td class="py-2.5 px-3 text-purple-500 font-medium">83${i}.0</td>
-              <td class="py-2.5 px-2 text-slate-400">37.2</td>
-              <td class="py-2.5 px-2 text-slate-400">37.5</td>
-              <td class="py-2.5 px-2 text-slate-400">37.9</td>
-              <td class="py-2.5 px-2 text-slate-400">38.1</td>
-              <td class="py-2.5 px-2 text-slate-400">38.4</td>
-              <td class="py-2.5 px-2 text-slate-400">38.7</td>
-              <td class="py-2.5 px-2 text-slate-400">39.0</td>
-              <td class="py-2.5 px-2 text-slate-400">39.3</td>
-              <td class="py-2.5 px-3 text-orange-400">32.4</td>
-              <td class="py-2.5 px-3 text-sky-400">68.0</td>
-              <td class="py-2.5 px-3 text-cyan-400">2.35</td>
-            </tr>
-          `;
-        }
-        tableBody.innerHTML = dummyRows;
-        lucide.createIcons();
-      }
-    }, 2500);
 
     // --- EKSPOR CSV DENGAN FILTER 10 MENIT SEKALI ---
     btnCsv.addEventListener("click", async () => {
